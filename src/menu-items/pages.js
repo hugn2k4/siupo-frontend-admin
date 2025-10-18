@@ -1,9 +1,13 @@
 // assets
-import { IconKey } from '@tabler/icons-react';
+import { IconKey, IconMenu, IconShoppingCart, IconTable, IconUser } from '@tabler/icons-react';
 
 // constant
 const icons = {
-  IconKey
+  IconKey,
+  IconMenu,
+  IconUser,
+  IconTable,
+  IconShoppingCart
 };
 
 // ==============================|| EXTRA PAGES MENU ITEMS ||============================== //
@@ -16,25 +20,59 @@ const pages = {
   type: 'group',
   children: [
     {
-      id: 'authentication',
-      title: 'Authentication',
+      id: 'menu',
+      title: 'Menu',
       type: 'collapse',
-      icon: icons.IconKey,
+      icon: icons.IconMenu,
       children: [
         {
-          id: 'login',
-          title: 'login',
+          id: 'menu-list',
+          title: 'Menu List',
           type: 'item',
-          url: '/pages/login',
-          target: true
+          url: '/menu/list'
         },
         {
-          id: 'register',
-          title: 'register',
+          id: 'menu-add',
+          title: 'Add New Menu',
           type: 'item',
-          url: '/pages/register',
-          target: true
+          url: '/menu/add'
+        },
+        {
+          id: 'menu-category',
+          title: 'Manage Categories',
+          type: 'item',
+          url: '/menu/category'
         }
+      ]
+    },
+    {
+      id: 'users',
+      title: 'Users',
+      type: 'collapse',
+      icon: icons.IconUser,
+      children: [
+        { id: 'user-list', title: 'User List', type: 'item', url: '/users/list' },
+        { id: 'user-add', title: 'Add User', type: 'item', url: '/users/add' }
+      ]
+    },
+    {
+      id: 'reservations',
+      title: 'Table Reservations',
+      type: 'collapse',
+      icon: icons.IconTable,
+      children: [
+        { id: 'reservation-list', title: 'Reservation List', type: 'item', url: '/reservations/list' },
+        { id: 'reservation-add', title: 'Add Reservation', type: 'item', url: '/reservations/add' }
+      ]
+    },
+    {
+      id: 'orders',
+      title: 'Orders',
+      type: 'collapse',
+      icon: icons.IconShoppingCart,
+      children: [
+        { id: 'order-list', title: 'Order List', type: 'item', url: '/orders/list' },
+        { id: 'order-returns', title: 'Returns / Refunds', type: 'item', url: '/orders/returns' }
       ]
     }
   ]

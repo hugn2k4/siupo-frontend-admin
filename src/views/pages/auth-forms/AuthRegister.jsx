@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // material-ui
-import { useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
@@ -12,9 +12,8 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
-import TextField from '@mui/material/TextField';
+import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
 
 // project imports
 import AnimateButton from 'ui-component/extended/AnimateButton';
@@ -29,13 +28,21 @@ export default function AuthRegister() {
   const theme = useTheme();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [checked, setChecked] = useState(true);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
+  const handleClickShowConfirmPassword = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
 
   const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+  const handleMouseDownConfirmPassword = (event) => {
     event.preventDefault();
   };
 
@@ -49,33 +56,13 @@ export default function AuthRegister() {
         </Grid>
       </Grid>
 
-      <Grid container spacing={{ xs: 0, sm: 2 }}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            fullWidth
-            label="First Name"
-            margin="normal"
-            name="firstName"
-            type="text"
-            value="Jhones"
-            sx={{ ...theme.typography.customInput }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            fullWidth
-            label="Last Name"
-            margin="normal"
-            name="lastName"
-            type="text"
-            value="Doe"
-            sx={{ ...theme.typography.customInput }}
-          />
-        </Grid>
-      </Grid>
       <FormControl fullWidth sx={{ ...theme.typography.customInput }}>
-        <InputLabel htmlFor="outlined-adornment-email-register">Email Address / Username</InputLabel>
-        <OutlinedInput id="outlined-adornment-email-register" type="email" value="jones@doe.com" name="email" />
+        <InputLabel htmlFor="outlined-adornment-fullName-register">Full Name</InputLabel>
+        <OutlinedInput id="outlined-adornment-fullName-register" type="text" value="Lê Công Hùng" name="fullName" />
+      </FormControl>
+      <FormControl fullWidth sx={{ ...theme.typography.customInput }}>
+        <InputLabel htmlFor="outlined-adornment-email-register">Email Address </InputLabel>
+        <OutlinedInput id="outlined-adornment-email-register" type="email" value="hcl2k4@gmail.com" name="email" />
       </FormControl>
 
       <FormControl fullWidth sx={{ ...theme.typography.customInput }}>
@@ -83,7 +70,7 @@ export default function AuthRegister() {
         <OutlinedInput
           id="outlined-adornment-password-register"
           type={showPassword ? 'text' : 'password'}
-          value="Jhones@123"
+          value="123456"
           name="password"
           label="Password"
           endAdornment={
@@ -96,6 +83,30 @@ export default function AuthRegister() {
                 size="large"
               >
                 {showPassword ? <Visibility /> : <VisibilityOff />}
+              </IconButton>
+            </InputAdornment>
+          }
+        />
+      </FormControl>
+
+      <FormControl fullWidth sx={{ ...theme.typography.customInput }}>
+        <InputLabel htmlFor="outlined-adornment-confirm-password-register">Confirm Password</InputLabel>
+        <OutlinedInput
+          id="outlined-adornment-confirm-password-register"
+          type={showConfirmPassword ? 'text' : 'password'}
+          value="123456"
+          name="confirm-password"
+          label="Confirm Password"
+          endAdornment={
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="toggle confirm password visibility"
+                onClick={handleClickShowConfirmPassword}
+                onMouseDown={handleMouseDownConfirmPassword}
+                edge="end"
+                size="large"
+              >
+                {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
               </IconButton>
             </InputAdornment>
           }

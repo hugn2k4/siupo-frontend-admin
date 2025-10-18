@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 // material-ui
-import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
@@ -18,19 +18,19 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
 
 // project imports
-import UpgradePlanCard from './UpgradePlanCard';
+import useConfig from 'hooks/useConfig';
 import MainCard from 'ui-component/cards/MainCard';
 import Transitions from 'ui-component/extended/Transitions';
-import useConfig from 'hooks/useConfig';
 
 // assets
+import { IconKey, IconLogout, IconSearch, IconSettings, IconUser } from '@tabler/icons-react';
 import User1 from 'assets/images/users/user-round.svg';
-import { IconLogout, IconSearch, IconSettings, IconUser } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 
 // ==============================|| PROFILE MENU ||============================== //
 
@@ -42,6 +42,8 @@ export default function ProfileSection() {
   const [notification, setNotification] = useState(false);
   const [selectedIndex] = useState(-1);
   const [open, setOpen] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
+  const navigate = useNavigate();
 
   /**
    * anchorRef is used on different components and specifying one type leads to other components throwing an error
@@ -162,7 +164,6 @@ export default function ProfileSection() {
                         '&::-webkit-scrollbar': { width: 5 }
                       }}
                     >
-                      <UpgradePlanCard />
                       <Divider />
                       <Card sx={{ bgcolor: 'primary.light', my: 2 }}>
                         <CardContent>
@@ -202,52 +203,91 @@ export default function ProfileSection() {
                         </CardContent>
                       </Card>
                       <Divider />
-                      <List
-                        component="nav"
-                        sx={{
-                          width: '100%',
-                          maxWidth: 350,
-                          minWidth: 300,
-                          borderRadius: `${borderRadius}px`,
-                          '& .MuiListItemButton-root': { mt: 0.5 }
-                        }}
-                      >
-                        <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 0}>
-                          <ListItemIcon>
-                            <IconSettings stroke={1.5} size="20px" />
-                          </ListItemIcon>
-                          <ListItemText primary={<Typography variant="body2">Account Settings</Typography>} />
-                        </ListItemButton>
-                        <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 1}>
-                          <ListItemIcon>
-                            <IconUser stroke={1.5} size="20px" />
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={
-                              <Grid container spacing={1} sx={{ justifyContent: 'space-between' }}>
-                                <Grid>
-                                  <Typography variant="body2">Social Profile</Typography>
+                      {isLogin ? (
+                        <List
+                          component="nav"
+                          sx={{
+                            width: '100%',
+                            maxWidth: 350,
+                            minWidth: 300,
+                            borderRadius: `${borderRadius}px`,
+                            '& .MuiListItemButton-root': { mt: 0.5 }
+                          }}
+                        >
+                          <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 0}>
+                            <ListItemIcon>
+                              <IconSettings stroke={1.5} size="20px" />
+                            </ListItemIcon>
+                            <ListItemText primary={<Typography variant="body2">Account Settings</Typography>} />
+                          </ListItemButton>
+                          <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 1}>
+                            <ListItemIcon>
+                              <IconUser stroke={1.5} size="20px" />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={
+                                <Grid container spacing={1} sx={{ justifyContent: 'space-between' }}>
+                                  <Grid>
+                                    <Typography variant="body2">Social Profile</Typography>
+                                  </Grid>
+                                  <Grid>
+                                    <Chip
+                                      label="02"
+                                      variant="filled"
+                                      size="small"
+                                      color="warning"
+                                      sx={{ '& .MuiChip-label': { mt: 0.25 } }}
+                                    />
+                                  </Grid>
                                 </Grid>
-                                <Grid>
-                                  <Chip
-                                    label="02"
-                                    variant="filled"
-                                    size="small"
-                                    color="warning"
-                                    sx={{ '& .MuiChip-label': { mt: 0.25 } }}
-                                  />
-                                </Grid>
-                              </Grid>
-                            }
-                          />
-                        </ListItemButton>
-                        <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 4}>
-                          <ListItemIcon>
-                            <IconLogout stroke={1.5} size="20px" />
-                          </ListItemIcon>
-                          <ListItemText primary={<Typography variant="body2">Logout</Typography>} />
-                        </ListItemButton>
-                      </List>
+                              }
+                            />
+                          </ListItemButton>
+                          <ListItemButton
+                            sx={{ borderRadius: `${borderRadius}px` }}
+                            selected={selectedIndex === 2}
+                            onClick={() => setIsLogin(false)}
+                          >
+                            <ListItemIcon>
+                              <IconLogout stroke={1.5} size="20px" />
+                            </ListItemIcon>
+                            <ListItemText primary={<Typography variant="body2">Logout</Typography>} />
+                          </ListItemButton>
+                        </List>
+                      ) : (
+                        <List
+                          component="nav"
+                          sx={{
+                            width: '100%',
+                            maxWidth: 350,
+                            minWidth: 300,
+                            borderRadius: `${borderRadius}px`,
+                            '& .MuiListItemButton-root': { mt: 0.5 }
+                          }}
+                        >
+                          <ListItemButton
+                            sx={{ borderRadius: `${borderRadius}px` }}
+                            selected={selectedIndex === 0}
+                            // onClick={() => navigate('/pages/login')}
+                            onClick={() => setIsLogin(true)}
+                          >
+                            <ListItemIcon>
+                              <IconKey stroke={1.5} size="20px" />
+                            </ListItemIcon>
+                            <ListItemText primary={<Typography variant="body2">Login</Typography>} />
+                          </ListItemButton>
+                          <ListItemButton
+                            sx={{ borderRadius: `${borderRadius}px` }}
+                            selected={selectedIndex === 1}
+                            onClick={() => navigate('/pages/register  ')}
+                          >
+                            <ListItemIcon>
+                              <IconUser stroke={1.5} size="20px" />
+                            </ListItemIcon>
+                            <ListItemText primary={<Typography variant="body2">Register</Typography>} />
+                          </ListItemButton>
+                        </List>
+                      )}
                     </Box>
                   </MainCard>
                 )}
