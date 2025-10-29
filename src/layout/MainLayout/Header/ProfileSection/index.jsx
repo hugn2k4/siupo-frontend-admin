@@ -28,10 +28,11 @@ import MainCard from 'ui-component/cards/MainCard';
 import Transitions from 'ui-component/extended/Transitions';
 
 // assets
-import { IconKey, IconLogout, IconSearch, IconSettings, IconUser } from '@tabler/icons-react';
+import { IconLogout, IconSearch, IconSettings, IconUser } from '@tabler/icons-react';
 import User1 from 'assets/images/users/user-round.svg';
-import { useNavigate } from 'react-router-dom';
 
+import { useGlobal } from 'hooks/useGlobal';
+import { useNavigate } from 'react-router-dom';
 // ==============================|| PROFILE MENU ||============================== //
 
 export default function ProfileSection() {
@@ -42,7 +43,8 @@ export default function ProfileSection() {
   const [notification, setNotification] = useState(false);
   const [selectedIndex] = useState(-1);
   const [open, setOpen] = useState(false);
-  const [isLogin, setIsLogin] = useState(false);
+
+  const { logout } = useGlobal();
   const navigate = useNavigate();
 
   /**
@@ -60,6 +62,13 @@ export default function ProfileSection() {
     }
 
     setOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setTimeout(() => {
+      navigate('/pages/login');
+    }, 3000);
   };
 
   const prevOpen = useRef(open);
@@ -203,91 +212,52 @@ export default function ProfileSection() {
                         </CardContent>
                       </Card>
                       <Divider />
-                      {isLogin ? (
-                        <List
-                          component="nav"
-                          sx={{
-                            width: '100%',
-                            maxWidth: 350,
-                            minWidth: 300,
-                            borderRadius: `${borderRadius}px`,
-                            '& .MuiListItemButton-root': { mt: 0.5 }
-                          }}
-                        >
-                          <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 0}>
-                            <ListItemIcon>
-                              <IconSettings stroke={1.5} size="20px" />
-                            </ListItemIcon>
-                            <ListItemText primary={<Typography variant="body2">Account Settings</Typography>} />
-                          </ListItemButton>
-                          <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 1}>
-                            <ListItemIcon>
-                              <IconUser stroke={1.5} size="20px" />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Grid container spacing={1} sx={{ justifyContent: 'space-between' }}>
-                                  <Grid>
-                                    <Typography variant="body2">Social Profile</Typography>
-                                  </Grid>
-                                  <Grid>
-                                    <Chip
-                                      label="02"
-                                      variant="filled"
-                                      size="small"
-                                      color="warning"
-                                      sx={{ '& .MuiChip-label': { mt: 0.25 } }}
-                                    />
-                                  </Grid>
+                      <List
+                        component="nav"
+                        sx={{
+                          width: '100%',
+                          maxWidth: 350,
+                          minWidth: 300,
+                          borderRadius: `${borderRadius}px`,
+                          '& .MuiListItemButton-root': { mt: 0.5 }
+                        }}
+                      >
+                        <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 0}>
+                          <ListItemIcon>
+                            <IconSettings stroke={1.5} size="20px" />
+                          </ListItemIcon>
+                          <ListItemText primary={<Typography variant="body2">Account Settings</Typography>} />
+                        </ListItemButton>
+                        <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 1}>
+                          <ListItemIcon>
+                            <IconUser stroke={1.5} size="20px" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={
+                              <Grid container spacing={1} sx={{ justifyContent: 'space-between' }}>
+                                <Grid>
+                                  <Typography variant="body2">Social Profile</Typography>
                                 </Grid>
-                              }
-                            />
-                          </ListItemButton>
-                          <ListItemButton
-                            sx={{ borderRadius: `${borderRadius}px` }}
-                            selected={selectedIndex === 2}
-                            onClick={() => setIsLogin(false)}
-                          >
-                            <ListItemIcon>
-                              <IconLogout stroke={1.5} size="20px" />
-                            </ListItemIcon>
-                            <ListItemText primary={<Typography variant="body2">Logout</Typography>} />
-                          </ListItemButton>
-                        </List>
-                      ) : (
-                        <List
-                          component="nav"
-                          sx={{
-                            width: '100%',
-                            maxWidth: 350,
-                            minWidth: 300,
-                            borderRadius: `${borderRadius}px`,
-                            '& .MuiListItemButton-root': { mt: 0.5 }
-                          }}
-                        >
-                          <ListItemButton
-                            sx={{ borderRadius: `${borderRadius}px` }}
-                            selected={selectedIndex === 0}
-                            // onClick={() => navigate('/pages/login')}
-                            onClick={() => setIsLogin(true)}
-                          >
-                            <ListItemIcon>
-                              <IconKey stroke={1.5} size="20px" />
-                            </ListItemIcon>
-                            <ListItemText primary={<Typography variant="body2">Login</Typography>} />
-                          </ListItemButton>
-                          <ListItemButton
-                            sx={{ borderRadius: `${borderRadius}px` }}
-                            selected={selectedIndex === 1}
-                            onClick={() => navigate('/pages/register  ')}
-                          >
-                            <ListItemIcon>
-                              <IconUser stroke={1.5} size="20px" />
-                            </ListItemIcon>
-                            <ListItemText primary={<Typography variant="body2">Register</Typography>} />
-                          </ListItemButton>
-                        </List>
-                      )}
+                                <Grid>
+                                  <Chip
+                                    label="02"
+                                    variant="filled"
+                                    size="small"
+                                    color="warning"
+                                    sx={{ '& .MuiChip-label': { mt: 0.25 } }}
+                                  />
+                                </Grid>
+                              </Grid>
+                            }
+                          />
+                        </ListItemButton>
+                        <ListItemButton sx={{ borderRadius: `${borderRadius}px` }} selected={selectedIndex === 2} onClick={handleLogout}>
+                          <ListItemIcon>
+                            <IconLogout stroke={1.5} size="20px" />
+                          </ListItemIcon>
+                          <ListItemText primary={<Typography variant="body2">Logout</Typography>} />
+                        </ListItemButton>
+                      </List>
                     </Box>
                   </MainCard>
                 )}

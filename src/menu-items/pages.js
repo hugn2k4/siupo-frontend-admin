@@ -1,10 +1,11 @@
 // assets
-import { IconKey, IconMenu, IconShoppingCart, IconTable, IconUser } from '@tabler/icons-react';
+import { IconCategory2, IconKey, IconMenu, IconShoppingCart, IconTable, IconUser } from '@tabler/icons-react';
 
 // constant
 const icons = {
   IconKey,
   IconMenu,
+  IconCategory2,
   IconUser,
   IconTable,
   IconShoppingCart
@@ -27,21 +28,29 @@ const pages = {
       children: [
         {
           id: 'menu-list',
-          title: 'Menu List',
+          title: 'List Food',
           type: 'item',
-          url: '/menu/list'
+          url: '/menu/list-food'
+        }
+      ]
+    },
+    {
+      id: 'categories',
+      title: 'Categories',
+      type: 'collapse',
+      icon: icons.IconCategory2,
+      children: [
+        {
+          id: 'category-list',
+          title: 'Category List',
+          type: 'item',
+          url: '/categories/list'
         },
         {
-          id: 'menu-add',
-          title: 'Add New Menu',
+          id: 'category-add',
+          title: 'Add New Category',
           type: 'item',
-          url: '/menu/add'
-        },
-        {
-          id: 'menu-category',
-          title: 'Manage Categories',
-          type: 'item',
-          url: '/menu/category'
+          url: '/categories/add'
         }
       ]
     },

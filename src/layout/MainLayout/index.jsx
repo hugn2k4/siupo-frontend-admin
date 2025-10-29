@@ -2,23 +2,22 @@ import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 
 // material-ui
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Box from '@mui/material/Box';
 
 // project imports
+import Loader from 'ui-component/Loader';
+import Customization from '../Customization';
 import Footer from './Footer';
 import Header from './Header';
-import Sidebar from './Sidebar';
 import MainContentStyled from './MainContentStyled';
-import Customization from '../Customization';
-import Loader from 'ui-component/Loader';
-import Breadcrumbs from 'ui-component/extended/Breadcrumbs';
+import Sidebar from './Sidebar';
 
-import useConfig from 'hooks/useConfig';
 import { handlerDrawerOpen, useGetMenuMaster } from 'api/menu';
+import useConfig from 'hooks/useConfig';
 
 // ==============================|| MAIN LAYOUT ||============================== //
 
@@ -58,7 +57,7 @@ export default function MainLayout() {
       <MainContentStyled {...{ borderRadius, open: drawerOpen }}>
         <Box sx={{ ...{ px: { xs: 0 } }, minHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column' }}>
           {/* breadcrumb */}
-          <Breadcrumbs />
+          {/* <Breadcrumbs /> */}
           <Outlet />
           <Footer />
         </Box>
