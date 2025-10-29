@@ -8,6 +8,9 @@ import NavigationScroll from 'layout/NavigationScroll';
 
 import ThemeCustomization from 'themes';
 
+import { GlobalProvider } from 'contexts/GlobalProvider';
+import { SnackbarProvider } from 'contexts/SnackbarProvider';
+
 // auth provider
 
 // ==============================|| APP ||============================== //
@@ -16,9 +19,13 @@ export default function App() {
   return (
     <ThemeCustomization>
       <NavigationScroll>
-        <>
-          <RouterProvider router={router} />
-        </>
+        <SnackbarProvider>
+          <GlobalProvider>
+            <>
+              <RouterProvider router={router} />
+            </>
+          </GlobalProvider>
+        </SnackbarProvider>
       </NavigationScroll>
     </ThemeCustomization>
   );

@@ -54,8 +54,8 @@ export default function Login() {
                   </Grid>
                   <Grid size={12}>
                     <Grid container direction="column" sx={{ alignItems: 'center' }} size={12}>
-                      <Typography component={Link} to="/pages/register" variant="subtitle1" sx={{ textDecoration: 'none' }}>
-                        Don&apos;t have an account?
+                      <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center', maxWidth: 420 }}>
+                        Contact your administrator to request access.
                       </Typography>
                     </Grid>
                   </Grid>

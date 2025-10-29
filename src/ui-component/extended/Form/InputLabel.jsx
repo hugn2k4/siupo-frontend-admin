@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 // material-ui
-import { experimentalStyled as styled } from '@mui/material/styles';
 import MuiInputLabel from '@mui/material/InputLabel';
+import { styled } from '@mui/material/styles';
 
 const BInputLabel = styled((props) => <MuiInputLabel {...props} />, {
   shouldForwardProp: (prop) => prop !== 'horizontal'

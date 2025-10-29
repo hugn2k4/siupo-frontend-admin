@@ -3,6 +3,7 @@ import { lazy } from 'react';
 // project imports
 import MainLayout from 'layout/MainLayout';
 import Loadable from 'ui-component/Loadable';
+import PrivateRoute from './PrivateRoute';
 
 // dashboard routing
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')));
@@ -15,11 +16,17 @@ const UtilsShadow = Loadable(lazy(() => import('views/utilities/Shadow')));
 // sample page routing
 const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
+// menu list routing
+const ListFood = Loadable(lazy(() => import('views/pages/menu/ListFood')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
   path: '/',
-  element: <MainLayout />,
+  element: (
+    <PrivateRoute>
+      <MainLayout />
+    </PrivateRoute>
+  ),
   children: [
     {
       path: '/',
@@ -31,6 +38,15 @@ const MainRoutes = {
         {
           path: 'default',
           element: <DashboardDefault />
+        }
+      ]
+    },
+    {
+      path: 'menu',
+      children: [
+        {
+          path: 'list-food',
+          element: <ListFood />
         }
       ]
     },
