@@ -18,6 +18,10 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
 // menu list routing
 const ListFood = Loadable(lazy(() => import('views/pages/menu/ListFood')));
+
+// order table routing
+const PlaceTableGuest = Loadable(lazy(() => import('views/pages/place-table/GuestBookingManagement')));
+const PlaceTableCustomer = Loadable(lazy(() => import('views/pages/place-table/CustomerBookingManagement')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -47,6 +51,19 @@ const MainRoutes = {
         {
           path: 'list-food',
           element: <ListFood />
+        }
+      ]
+    },
+    {
+      path: 'place-table',
+      children: [
+        {
+          path: 'place-table-for-guest',
+          element: <PlaceTableGuest />
+        },
+        {
+          path: 'place-table-for-customer',
+          element: <PlaceTableCustomer />
         }
       ]
     },
