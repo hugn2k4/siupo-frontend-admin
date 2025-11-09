@@ -36,6 +36,26 @@ const pages = {
       ]
     },
     {
+      id: 'place-table',
+      title: 'Place Table',
+      type: 'collapse',
+      icon: icons.IconTable,
+      children: [
+        {
+          id: 'place-table-for-guest',
+          title: 'Place Table for Guest',
+          type: 'item',
+          url: '/place-table/place-table-for-guest'
+        },
+        {
+          id: 'place-table-for-customer',
+          title: 'Place Table for Customer',
+          type: 'item',
+          url: '/place-table/place-table-for-customer'
+        }
+      ]
+    },
+    {
       id: 'categories',
       title: 'Categories',
       type: 'collapse',
@@ -63,16 +83,6 @@ const pages = {
       children: [
         { id: 'user-list', title: 'User List', type: 'item', url: '/users/list' },
         { id: 'user-add', title: 'Add User', type: 'item', url: '/users/add' }
-      ]
-    },
-    {
-      id: 'reservations',
-      title: 'Table Reservations',
-      type: 'collapse',
-      icon: icons.IconTable,
-      children: [
-        { id: 'reservation-list', title: 'Reservation List', type: 'item', url: '/reservations/list' },
-        { id: 'reservation-add', title: 'Add Reservation', type: 'item', url: '/reservations/add' }
       ]
     },
     {
