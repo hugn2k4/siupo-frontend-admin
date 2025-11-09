@@ -18,6 +18,8 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
 // menu list routing
 const ListFood = Loadable(lazy(() => import('views/pages/menu/ListFood')));
+
+const AccountProfile = Loadable(lazy(() => import('views/pages/account/Profile')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -47,6 +49,15 @@ const MainRoutes = {
         {
           path: 'list-food',
           element: <ListFood />
+        }
+      ]
+    },
+    {
+      path: 'account',
+      children: [
+        {
+          path: 'profile',
+          element: <AccountProfile />
         }
       ]
     },
