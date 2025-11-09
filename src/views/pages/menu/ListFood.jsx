@@ -25,14 +25,17 @@ import {
   Typography
 } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
 // filters removed (FormControl, Select etc.)
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import { useSnackbar } from 'contexts/SnackbarProvider';
 import { useEffect, useState } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
 import productService from '../../../services/productService';
+import DeleteConfirmDialog from './component/DeleteConfirmDialog';
 
 // Mock data generator imported from api/menu.mock
 
@@ -50,6 +53,11 @@ export default function ListFood() {
   const [priceAnchorEl, setPriceAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [openPopupDelete, setOpenPopupDelete] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteName, setDeleteName] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
 
   const allCategories = ['Pasta', 'Main'];
 
@@ -96,9 +104,94 @@ export default function ListFood() {
 
   // Item action
   const handleAdd = () => {};
-  const handleDelete = (id) => {};
   const handleEdit = (id) => {};
-  const handleToggleStatus = (id) => {};
+  const handleToggleStatus = async (id) => {
+    let oldStatus;
+    setDataRows((prev) =>
+      prev.map((row) => {
+        if (row.id === id) {
+          oldStatus = row.status;
+          const newStatus = row.status.toUpperCase() === 'AVAILABLE' ? 'UNAVAILABLE' : 'AVAILABLE';
+          return { ...row, status: newStatus };
+        }
+        return row;
+      })
+    );
+
+    try {
+      const res = await productService.changStatusProduct(id);
+      if (res && res.success === false) {
+        setDataRows((prev) => prev.map((row) => (row.id === id ? { ...row, status: oldStatus } : row)));
+        showSnackbar({ message: res?.message || 'Failed to change status', severity: 'error' });
+      } else {
+        const newStatusMessage = oldStatus.toUpperCase() === 'AVAILABLE' ? 'Product is now UNAVAILABLE' : 'Product is now AVAILABLE';
+        showSnackbar({ message: newStatusMessage, severity: 'success' });
+      }
+    } catch (err) {
+      setDataRows((prev) => prev.map((row) => (row.id === id ? { ...row, status: oldStatus } : row)));
+      showSnackbar({ message: err?.message || 'Failed to change status', severity: 'error' });
+    }
+  };
+
+  const handleOpenDelete = (id, name) => {
+    setDeleteId(id);
+    setDeleteName(name || '');
+    setOpenPopupDelete(true);
+  };
+  const { showSnackbar } = useSnackbar();
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await productService.getProducts(page, rowsPerPage);
+      const envelope = res?.data ?? res;
+      const content = envelope?.content ?? envelope?.items ?? envelope?.results ?? (Array.isArray(envelope) ? envelope : undefined) ?? [];
+      const items = Array.isArray(content) ? content : [];
+      const total = envelope?.totalElements ?? envelope?.total ?? res?.totalElements ?? res?.total ?? items.length;
+      setDataRows(items);
+      setTotalRows(Number(total) || 0);
+    } catch (err) {
+      setError(err?.message || 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async (id) => {
+    // Optimistic UI: remove the item locally first for a smooth UX,
+    // then call delete API in background and reconcile or revert on failure.
+    const previousRows = dataRows;
+    const prevTotal = totalRows;
+
+    // optimistic remove
+    setDataRows((prev) => prev.filter((r) => r.id !== id));
+    setTotalRows((t) => Math.max(0, t - 1));
+    setOpenPopupDelete(false);
+    setDeleteId(null);
+    setDeleteName('');
+    setDeletingId(id);
+
+    try {
+      const res = await productService.deleteProduct(id);
+      if (res && res.success !== false) {
+        if (typeof showSnackbar === 'function') showSnackbar({ message: 'Product deleted', severity: 'success' });
+        // optionally refresh in background to reconcile any server-side differences
+        fetchProducts().catch(() => {});
+      } else {
+        // revert optimistic update
+        setDataRows(previousRows);
+        setTotalRows(prevTotal);
+        if (typeof showSnackbar === 'function') showSnackbar({ message: res?.message || 'Failed to delete', severity: 'error' });
+      }
+    } catch (err) {
+      setDataRows(previousRows);
+      setTotalRows(prevTotal);
+      if (typeof showSnackbar === 'function') showSnackbar({ message: err?.message || 'Failed to delete', severity: 'error' });
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   // Helper to robustly obtain the first image URL from a product row
   const getFirstImage = (row) => {
@@ -265,19 +358,19 @@ export default function ListFood() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={8} align="center">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={8} align="center">
                   {`Error: ${error}`}
                 </TableCell>
               </TableRow>
             ) : dataRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={8} align="center">
                   No items
                 </TableCell>
               </TableRow>
@@ -316,7 +409,7 @@ export default function ListFood() {
                   </TableCell>
                   <TableCell align="right">{Number(row.price).toLocaleString()} VND</TableCell>
                   <TableCell align="center">
-                    <Chip label={row.status} color={row.status === 'Available' ? 'success' : 'default'} size="small" />
+                    <Chip label={row.status} color={row.status.toUpperCase() === 'AVAILABLE' ? 'success' : 'default'} size="small" />
                   </TableCell>
                   <TableCell align="center">
                     <Tooltip title="Edit">
@@ -325,13 +418,19 @@ export default function ListFood() {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete">
-                      <IconButton size="small" color="error" aria-label="delete" onClick={() => handleDelete(row.id)}>
-                        <DeleteIcon fontSize="small" />
+                      <IconButton
+                        size="small"
+                        color="error"
+                        aria-label="delete"
+                        onClick={() => handleOpenDelete(row.id, row.name)}
+                        disabled={deletingId === row.id}
+                      >
+                        {deletingId === row.id ? <CircularProgress size={18} thickness={5} /> : <DeleteIcon fontSize="small" />}
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Toggle status">
                       <IconButton size="small" onClick={() => handleToggleStatus(row.id)}>
-                        {row.status === 'Available' ? <ToggleOnIcon color="success" /> : <ToggleOffIcon color="disabled" />}
+                        {row.status.toUpperCase() === 'AVAILABLE' ? <ToggleOnIcon color="success" /> : <ToggleOffIcon color="disabled" />}
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -350,6 +449,14 @@ export default function ListFood() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[25, 50, 100]}
+      />
+      <DeleteConfirmDialog
+        open={openPopupDelete}
+        onClose={() => setOpenPopupDelete(false)}
+        id={deleteId}
+        name={deleteName}
+        onConfirm={() => handleConfirmDelete(deleteId)}
+        title="Xóa sản phẩm"
       />
     </MainCard>
   );
