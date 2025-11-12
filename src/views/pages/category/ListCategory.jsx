@@ -34,7 +34,7 @@ export default function ListCategory() {
 
   const fetchCategories = async () => {
     const res = await categoryService.getAll();
-    if (res && Array.isArray(res)) setRows(res);
+    if (res && Array.isArray(res?.data)) setRows(res.data);
   };
 
   React.useEffect(() => {

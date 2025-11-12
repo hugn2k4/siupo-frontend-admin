@@ -34,7 +34,9 @@ import Select from '@mui/material/Select';
 import { useSnackbar } from 'contexts/SnackbarProvider';
 import { useEffect, useState } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
+import categoryService from '../../../services/categoryService';
 import productService from '../../../services/productService';
+import uploadService from '../../../services/uploadService';
 import DeleteConfirmDialog from './component/DeleteConfirmDialog';
 import ProductEditDialog from './component/ProductEditDialog';
 
@@ -47,9 +49,9 @@ export default function ListFood() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [query, setQuery] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 200000]);
+  const [priceRange, setPriceRange] = useState([0, 200]);
   // appliedPriceRange is the one actually used for filtering; priceRange is the editor value
-  const [appliedPriceRange, setAppliedPriceRange] = useState([0, 200000]);
+  const [appliedPriceRange, setAppliedPriceRange] = useState([0, 200]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceAnchorEl, setPriceAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -60,7 +62,35 @@ export default function ListFood() {
   const [deleteName, setDeleteName] = useState('');
   const [deletingId, setDeletingId] = useState(null);
 
-  const allCategories = ['Pasta', 'Main'];
+  const [allCategories, setAllCategories] = useState([]);
+
+  // fetch categories from API on mount (keep id/name pairs)
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const res = await categoryService.getAll();
+        const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+        const mapped = list
+          .map((c) =>
+            typeof c === 'string'
+              ? null
+              : {
+                  id: c?.id ?? c?.value ?? null,
+                  name: c?.name ?? c?.label ?? ''
+                }
+          )
+          .filter((x) => x && x.id != null);
+        if (mounted) setAllCategories(mapped);
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Page
   const handleChangePage = (event, newPage) => {
@@ -172,20 +202,27 @@ export default function ListFood() {
 
       if (productService.createProduct) {
         try {
-          // if service expects FormData, caller can implement accordingly. Try FormData when files exist.
+          // Upload files first via upload API, then send JSON payload including returned URLs
           let res;
           if (files && files.length) {
-            const form = new FormData();
-            form.append('name', payload.name || '');
-            form.append('price', payload.price ?? '');
-            form.append('description', payload.description || '');
-            form.append('status', payload.status || 'ACTIVE');
-            if (payload.category && payload.category.id) form.append('categoryId', payload.category.id);
-            files.forEach((f) => form.append('files', f));
-            // optional: send JSON of other fields if backend expects
-            res = await productService.createProduct(form);
+            const urls = await uploadService.uploadMultiple(files);
+            const body = {
+              name: payload.name,
+              description: payload.description,
+              price: payload.price,
+              categoryId: payload.categoryId ?? payload.category?.id ?? null,
+              imageUrls: urls
+            };
+            res = await productService.createProduct(body);
           } else {
-            res = await productService.createProduct(payload);
+            const body = {
+              name: payload.name,
+              description: payload.description,
+              price: payload.price,
+              categoryId: payload.categoryId ?? payload.category?.id ?? null,
+              imageUrls: payload.imageUrls ?? payload.images ?? []
+            };
+            res = await productService.createProduct(body);
           }
 
           // replace temp item with server-provided one when available
@@ -215,21 +252,46 @@ export default function ListFood() {
 
       if (productService.updateProduct) {
         try {
+          // helper to extract url from different shapes
+          const extractUrl = (img) => {
+            if (!img) return '';
+            if (typeof img === 'string') return img;
+            return img.url || img.path || img.imageUrl || img.src || img.link || '';
+          };
+
+          // obtain existing images from current row so we can remove by id
+          const currentRow = dataRows.find((r) => r.id === payload.id) || {};
+          const existingArr = currentRow.images ?? currentRow.imageUrls ?? payload.imageUrls ?? payload.images ?? [];
+          const normalizedExisting = Array.isArray(existingArr)
+            ? existingArr.map((it) => ({ id: it?.id ?? null, url: extractUrl(it) }))
+            : [];
+
+          const keptExistingUrls = normalizedExisting
+            .filter((it) => !removedImageIds.includes(it.id))
+            .map((it) => it.url)
+            .filter(Boolean);
+
           let res;
           if (files && files.length) {
-            const form = new FormData();
-            form.append('name', payload.name || '');
-            form.append('price', payload.price ?? '');
-            form.append('description', payload.description || '');
-            form.append('status', payload.status || 'ACTIVE');
-            if (payload.category && payload.category.id) form.append('categoryId', payload.category.id);
-            form.append('removedImageIds', JSON.stringify(removedImageIds || []));
-            files.forEach((f) => form.append('files', f));
-            res = await productService.updateProduct(payload.id, form);
+            const newUrlsRaw = await uploadService.uploadMultiple(files);
+            const newUrls = Array.isArray(newUrlsRaw) ? newUrlsRaw : (newUrlsRaw?.data ?? newUrlsRaw?.urls ?? []);
+            const combined = [...keptExistingUrls, ...newUrls];
+            const body = {
+              name: payload.name,
+              description: payload.description,
+              price: payload.price,
+              categoryId: payload.categoryId ?? payload.category?.id ?? null,
+              imageUrls: combined
+            };
+            res = await productService.updateProduct(payload.id, body);
           } else {
-            // also send removedImageIds if present
-            const body = { ...payload };
-            if (removedImageIds && removedImageIds.length) body.removedImageIds = removedImageIds;
+            const body = {
+              name: payload.name,
+              description: payload.description,
+              price: payload.price,
+              categoryId: payload.categoryId ?? payload.category?.id ?? null,
+              imageUrls: keptExistingUrls
+            };
             res = await productService.updateProduct(payload.id, body);
           }
 
@@ -237,7 +299,6 @@ export default function ListFood() {
             showSnackbar({ message: res.message || 'Failed to update', severity: 'error' });
           } else {
             showSnackbar({ message: 'Product updated', severity: 'success' });
-            // reconcile server data if returned
             if (res && res.data) {
               setDataRows((prev) => prev.map((r) => (r.id === payload.id ? res.data : r)));
             }
@@ -255,7 +316,18 @@ export default function ListFood() {
     setLoading(true);
     setError(null);
     try {
-      const res = await productService.getProducts(page, rowsPerPage);
+      // build filters to send to backend /products/search
+      const filters = {};
+      if (query) filters.name = query;
+      if (Array.isArray(appliedPriceRange)) {
+        filters.minPrice = appliedPriceRange[0];
+        filters.maxPrice = appliedPriceRange[1];
+      }
+      if (Array.isArray(selectedCategories) && selectedCategories.length) {
+        filters.categoryIds = selectedCategories.join(',');
+      }
+
+      const res = await productService.getProducts(page, rowsPerPage, filters);
       const envelope = res?.data ?? res;
       const content = envelope?.content ?? envelope?.items ?? envelope?.results ?? (Array.isArray(envelope) ? envelope : undefined) ?? [];
       const items = Array.isArray(content) ? content : [];
@@ -331,7 +403,12 @@ export default function ListFood() {
     setLoading(true);
     setError(null);
     productService
-      .getProducts(page, rowsPerPage)
+      .getProducts(page, rowsPerPage, {
+        name: query || undefined,
+        minPrice: appliedPriceRange?.[0],
+        maxPrice: appliedPriceRange?.[1],
+        categoryIds: Array.isArray(selectedCategories) && selectedCategories.length ? selectedCategories.join(',') : undefined
+      })
       .then((res) => {
         if (!mounted) return;
 
@@ -398,8 +475,8 @@ export default function ListFood() {
               label="Category"
             >
               {allCategories.map((c) => (
-                <MenuItem key={c} value={c}>
-                  {c}
+                <MenuItem key={c.id} value={c.id}>
+                  {c.name}
                 </MenuItem>
               ))}
             </Select>
@@ -409,7 +486,7 @@ export default function ListFood() {
           <Box>
             <Button size="large" variant="outlined" onClick={handleOpenPrice}>
               {appliedPriceRange[0] > 0 || appliedPriceRange[1] < 200000
-                ? `${appliedPriceRange[0].toLocaleString()} - ${appliedPriceRange[1].toLocaleString()} VND`
+                ? `${appliedPriceRange[0].toLocaleString()} - ${appliedPriceRange[1].toLocaleString()} $`
                 : 'Price'}
             </Button>
             <Popover
@@ -518,9 +595,14 @@ export default function ListFood() {
                       {row.description}
                     </Typography>
                   </TableCell>
-                  <TableCell align="right">{Number(row.price).toLocaleString()} VND</TableCell>
+                  <TableCell align="right">{Number(row.price).toLocaleString()} $</TableCell>
                   <TableCell align="center">
-                    <Chip label={row.status} color={row.status.toUpperCase() === 'AVAILABLE' ? 'success' : 'default'} size="small" />
+                    {/* guard against undefined status */}
+                    <Chip
+                      label={row.status ?? 'UNAVAILABLE'}
+                      color={String(row.status || '').toUpperCase() === 'AVAILABLE' ? 'success' : 'default'}
+                      size="small"
+                    />
                   </TableCell>
                   <TableCell align="center">
                     <Tooltip title="Edit">
@@ -541,7 +623,11 @@ export default function ListFood() {
                     </Tooltip>
                     <Tooltip title="Toggle status">
                       <IconButton size="small" onClick={() => handleToggleStatus(row.id)}>
-                        {row.status.toUpperCase() === 'AVAILABLE' ? <ToggleOnIcon color="success" /> : <ToggleOffIcon color="disabled" />}
+                        {String(row.status || '').toUpperCase() === 'AVAILABLE' ? (
+                          <ToggleOnIcon color="success" />
+                        ) : (
+                          <ToggleOffIcon color="disabled" />
+                        )}
                       </IconButton>
                     </Tooltip>
                   </TableCell>

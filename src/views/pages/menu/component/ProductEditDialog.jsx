@@ -30,14 +30,32 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
       name: initialData?.name || '',
       price: initialData?.price || 0,
       description: initialData?.description || '',
-      status: initialData?.status || 'ACTIVE',
-      categoryId: initialData?.category?.id || ''
+      categoryId: initialData?.category?.id || '',
+      images: initialData?.images || []
     }
   });
 
   const { showSnackbar } = useSnackbar();
 
-  const [existingImages, setExistingImages] = React.useState(initialData?.images || []);
+  // helper to extract a usable image URL from various shapes returned by the backend
+  const getImageUrl = (img) => {
+    if (!img) return '';
+    if (typeof img === 'string') return img;
+    return img.url || img.path || img.imageUrl || img.src || img.link || '';
+  };
+
+  const [existingImages, setExistingImages] = React.useState(() => {
+    const arr = initialData?.images ?? initialData?.imageUrls ?? [];
+    if (!arr) return [];
+    return Array.isArray(arr)
+      ? arr.map((img, idx) => {
+          if (typeof img === 'string') {
+            return { id: `existing-${idx}`, url: img };
+          }
+          return { id: img.id ?? `existing-${idx}`, url: getImageUrl(img) };
+        })
+      : [];
+  });
   const [removedImageIds, setRemovedImageIds] = React.useState([]);
   // newFiles: array of { id, file }
   const [newFiles, setNewFiles] = React.useState([]);
@@ -51,10 +69,20 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
       name: initialData?.name || '',
       price: initialData?.price || 0,
       description: initialData?.description || '',
-      status: initialData?.status || 'ACTIVE',
-      categoryId: initialData?.category?.id || ''
+      categoryId: initialData?.category?.id || '',
+      images: initialData?.imageUrls || []
     });
-    setExistingImages(initialData?.images || []);
+    // normalize existing images into objects { id, url }
+    const arr = initialData?.images ?? initialData?.imageUrls ?? [];
+    const normalized = Array.isArray(arr)
+      ? arr.map((img, idx) => {
+          if (typeof img === 'string') {
+            return { id: `existing-${idx}`, url: img };
+          }
+          return { id: img.id ?? `existing-${idx}`, url: getImageUrl(img) };
+        })
+      : [];
+    setExistingImages(normalized);
     setRemovedImageIds([]);
     setNewFiles([]);
     setPreviews([]);
@@ -98,14 +126,25 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
 
   const submit = (data) => {
     const payload = {
-      ...initialData,
+      ...(initialData && initialData.id ? { id: initialData.id } : {}),
       name: data.name,
-      price: data.price,
       description: data.description,
-      status: data.status,
-      category: categories.find((c) => c.id === data.categoryId) || null
+      price: data.price,
+      categoryId: data.categoryId ? Number(data.categoryId) : (initialData?.category?.id ?? null),
+      imageUrls: existingImages.map((img) => getImageUrl(img))
     };
-    onSave(payload, initialData ? 'edit' : 'create', { files: newFiles, removedImageIds });
+
+    // include raw File[] for upload when present
+    const filesToSend = newFiles.map((n) => n.file);
+    try {
+      // call parent's onSave with payload matching ProductRequest and raw files + removed ids
+      if (typeof onSave === 'function') {
+        onSave(payload, initialData ? 'edit' : 'create', { files: filesToSend, removedImageIds });
+      }
+    } catch (e) {
+      // still close the dialog; parent will surface errors via snackbar
+      console.error('onSave error', e);
+    }
     onClose();
   };
 
@@ -133,7 +172,7 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
                         type="number"
                         size="small"
                         fullWidth
-                        InputProps={{ endAdornment: <InputAdornment position="end">VND</InputAdornment> }}
+                        InputProps={{ endAdornment: <InputAdornment position="end">$</InputAdornment> }}
                       />
                     )}
                   />
@@ -206,11 +245,11 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
                             {item ? (
                               <>
                                 <Avatar
-                                  src={item.data.url}
+                                  src={getImageUrl(item.data)}
                                   variant="rounded"
                                   sx={{ width: 100, height: 100, cursor: 'pointer' }}
                                   onClick={() => {
-                                    setPreviewUrl(item.data.url);
+                                    setPreviewUrl(getImageUrl(item.data));
                                     setPreviewOpen(true);
                                   }}
                                 />

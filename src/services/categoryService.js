@@ -4,7 +4,7 @@ const categoryService = {
   getAll: async () => {
     try {
       const res = await categoryApi.getCategories();
-      return res.data;
+      return res;
     } catch (error) {
       return { success: false, message: error?.message || 'Failed to fetch categories' };
     }
