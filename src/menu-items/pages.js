@@ -1,5 +1,5 @@
 // assets
-import { IconCategory2, IconKey, IconMenu, IconShoppingCart, IconTable, IconUser, IconSettings } from '@tabler/icons-react';
+import { IconCategory2, IconKey, IconMenu, IconSettings, IconShoppingCart, IconTable, IconUser } from '@tabler/icons-react';
 
 // constant
 const icons = {
@@ -63,15 +63,9 @@ const pages = {
       children: [
         {
           id: 'category-list',
-          title: 'Category List',
+          title: 'List Category',
           type: 'item',
-          url: '/categories/list'
-        },
-        {
-          id: 'category-add',
-          title: 'Add New Category',
-          type: 'item',
-          url: '/categories/add'
+          url: '/categories/list-category'
         }
       ]
     },
