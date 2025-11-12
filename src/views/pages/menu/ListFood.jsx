@@ -36,6 +36,7 @@ import { useEffect, useState } from 'react';
 import MainCard from 'ui-component/cards/MainCard';
 import productService from '../../../services/productService';
 import DeleteConfirmDialog from './component/DeleteConfirmDialog';
+import ProductEditDialog from './component/ProductEditDialog';
 
 // Mock data generator imported from api/menu.mock
 
@@ -103,8 +104,6 @@ export default function ListFood() {
   };
 
   // Item action
-  const handleAdd = () => {};
-  const handleEdit = (id) => {};
   const handleToggleStatus = async (id) => {
     let oldStatus;
     setDataRows((prev) =>
@@ -138,7 +137,119 @@ export default function ListFood() {
     setDeleteName(name || '');
     setOpenPopupDelete(true);
   };
+  // Edit / Create dialog
+  const [openEditPopup, setOpenEditPopup] = useState(false);
+  const [editMode, setEditMode] = useState('create');
+  const [editData, setEditData] = useState(null);
+
+  const handleAdd = () => {
+    setEditMode('create');
+    setEditData(null);
+    setOpenEditPopup(true);
+  };
+
+  const handleEdit = (id) => {
+    const row = dataRows.find((r) => r.id === id);
+    if (!row) return;
+    setEditMode('edit');
+    setEditData(row);
+    setOpenEditPopup(true);
+  };
+
   const { showSnackbar } = useSnackbar();
+
+  const handleSave = async (payload, mode, fileData = {}) => {
+    // Optimistic UI: create/update locally and call API in background if available
+    const { files = [], removedImageIds = [] } = fileData || {};
+
+    if (mode === 'create') {
+      const tempId = `tmp-${Date.now()}`;
+      // attach preview urls for new files so UI shows thumbnails immediately
+      const previews = (files || []).map((f) => ({ url: URL.createObjectURL(f), _temp: true }));
+      const newItem = { ...payload, id: tempId, images: previews };
+      setDataRows((prev) => [newItem, ...prev]);
+      setTotalRows((t) => t + 1);
+
+      if (productService.createProduct) {
+        try {
+          // if service expects FormData, caller can implement accordingly. Try FormData when files exist.
+          let res;
+          if (files && files.length) {
+            const form = new FormData();
+            form.append('name', payload.name || '');
+            form.append('price', payload.price ?? '');
+            form.append('description', payload.description || '');
+            form.append('status', payload.status || 'ACTIVE');
+            if (payload.category && payload.category.id) form.append('categoryId', payload.category.id);
+            files.forEach((f) => form.append('files', f));
+            // optional: send JSON of other fields if backend expects
+            res = await productService.createProduct(form);
+          } else {
+            res = await productService.createProduct(payload);
+          }
+
+          // replace temp item with server-provided one when available
+          if (res && res.data) {
+            setDataRows((prev) => prev.map((r) => (r.id === tempId ? res.data : r)));
+            showSnackbar({ message: 'Product created', severity: 'success' });
+          }
+        } catch (err) {
+          // revert
+          setDataRows((prev) => prev.filter((r) => r.id !== tempId));
+          setTotalRows((t) => Math.max(0, t - 1));
+          showSnackbar({ message: err?.message || 'Failed to create product', severity: 'error' });
+        }
+      } else {
+        showSnackbar({ message: 'Product created (local)', severity: 'success' });
+      }
+    } else if (mode === 'edit') {
+      // optimistic: update row locally, merging in new previews and removing any images that were deleted in the dialog
+      setDataRows((prev) =>
+        prev.map((r) => {
+          if (r.id !== payload.id) return r;
+          const existing = Array.isArray(r.images) ? r.images.filter((img) => !removedImageIds.includes(img.id)) : [];
+          const previews = (files || []).map((f) => ({ url: URL.createObjectURL(f), _temp: true }));
+          return { ...r, ...payload, images: [...existing, ...previews] };
+        })
+      );
+
+      if (productService.updateProduct) {
+        try {
+          let res;
+          if (files && files.length) {
+            const form = new FormData();
+            form.append('name', payload.name || '');
+            form.append('price', payload.price ?? '');
+            form.append('description', payload.description || '');
+            form.append('status', payload.status || 'ACTIVE');
+            if (payload.category && payload.category.id) form.append('categoryId', payload.category.id);
+            form.append('removedImageIds', JSON.stringify(removedImageIds || []));
+            files.forEach((f) => form.append('files', f));
+            res = await productService.updateProduct(payload.id, form);
+          } else {
+            // also send removedImageIds if present
+            const body = { ...payload };
+            if (removedImageIds && removedImageIds.length) body.removedImageIds = removedImageIds;
+            res = await productService.updateProduct(payload.id, body);
+          }
+
+          if (res && res.success === false) {
+            showSnackbar({ message: res.message || 'Failed to update', severity: 'error' });
+          } else {
+            showSnackbar({ message: 'Product updated', severity: 'success' });
+            // reconcile server data if returned
+            if (res && res.data) {
+              setDataRows((prev) => prev.map((r) => (r.id === payload.id ? res.data : r)));
+            }
+          }
+        } catch (err) {
+          showSnackbar({ message: err?.message || 'Failed to update', severity: 'error' });
+        }
+      } else {
+        showSnackbar({ message: 'Product updated (local)', severity: 'success' });
+      }
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -457,6 +568,14 @@ export default function ListFood() {
         name={deleteName}
         onConfirm={() => handleConfirmDelete(deleteId)}
         title="Xóa sản phẩm"
+      />
+      <ProductEditDialog
+        open={openEditPopup}
+        onClose={() => setOpenEditPopup(false)}
+        mode={editMode}
+        initialData={editData}
+        categories={allCategories}
+        onSave={handleSave}
       />
     </MainCard>
   );
