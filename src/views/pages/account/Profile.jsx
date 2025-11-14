@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import MainCard from '../../../ui-component/cards/MainCard.jsx';
 import { IconEye, IconEyeOff, IconLockOpen, IconCircleCheck, IconCircleX, IconLock } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import userApi from '../../../api/userApi'; // Đường dẫn đúng tới file api
 
 export default function Profile() {
@@ -27,6 +27,8 @@ export default function Profile() {
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   // Snackbar state
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -55,6 +57,23 @@ export default function Profile() {
   const strength = getStrength(newPass);
   const isMatch = confirmPass && newPass === confirmPass;
   const isNotEmpty = confirmPass !== '';
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoadingUser(true);
+        const response = await userApi.getCurrentUser();
+        setUser(response.data); // response.data là UserResponse
+      } catch (error) {
+        console.error('Lỗi tải thông tin người dùng:', error);
+        showNotification('Không thể tải thông tin người dùng', 'error');
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const handleChangePassword = async () => {
     // Validate frontend
@@ -109,16 +128,28 @@ export default function Profile() {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                   <Avatar
                     src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnwJi4dcsTyewsu16sY2E4lyx-W3OCgGMcCQ&s"
-                    alt="Kim Anh Võ"
+                    alt={user?.fullName || 'User'}
                     sx={{ width: 80, height: 80 }}
                   />
                   <Box>
-                    <Typography variant="h5" fontWeight={600}>
-                      Kim Anh Võ
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Admin | Siupo Restaurant
-                    </Typography>
+                    {loadingUser ? (
+                      <Typography variant="h5" color="text.secondary">
+                        <CircularProgress size={20} sx={{ mr: 1 }} /> Đang tải...
+                      </Typography>
+                    ) : user ? (
+                      <>
+                        <Typography variant="h5" fontWeight={600}>
+                          {user.fullName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {user.role === 'CUSTOMER' ? 'Khách hàng' : 'Quản trị viên'} | Siupo Restaurant
+                        </Typography>
+                      </>
+                    ) : (
+                      <Typography variant="h5" color="error">
+                        Không thể tải thông tin
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </Grid>
