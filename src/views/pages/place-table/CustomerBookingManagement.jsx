@@ -404,7 +404,7 @@ const CustomerBookingManagement = () => {
                 </div>
                 <div className="detail-row">
                   <p className="detail-label">SĐT:</p>
-                  <p className="detail-value">{selectedBooking.user?.phoneNumber || '-'}</p>
+                  <p className="detail-value">{selectedBooking.phoneNumber || '-'}</p>
                 </div>
                 {selectedBooking.user?.email && (
                   <div className="detail-row">

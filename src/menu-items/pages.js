@@ -56,6 +56,34 @@ const pages = {
       ]
     },
     {
+      id: 'banner',
+      title: 'Banner Management',
+      type: 'collapse',
+      icon: icons.IconTable,
+      children: [
+        {
+          id: 'banner-management',
+          title: 'Banner Management',
+          type: 'item',
+          url: '/banner/banner-management'
+        }
+      ]
+    },
+    {
+      id: 'notifications',
+      title: 'Notification Management',
+      type: 'collapse',
+      icon: icons.IconTable,
+      children: [
+        {
+          id: 'notification-management',
+          title: 'Notification Management',
+          type: 'item',
+          url: '/notificationsmanage/notification-management'
+        }
+      ]
+    },
+    {
       id: 'categories',
       title: 'Categories',
       type: 'collapse',
