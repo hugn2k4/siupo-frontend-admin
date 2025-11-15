@@ -28,6 +28,9 @@ const AccountProfile = Loadable(lazy(() => import('views/pages/account/Profile')
 const PlaceTableGuest = Loadable(lazy(() => import('views/pages/place-table/GuestBookingManagement')));
 const PlaceTableCustomer = Loadable(lazy(() => import('views/pages/place-table/CustomerBookingManagement')));
 const UserList = Loadable(lazy(() => import('views/pages/users/UserList')));
+
+// orders routing
+const OrderList = Loadable(lazy(() => import('views/pages/orders/OrderList')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -113,6 +116,15 @@ const MainRoutes = {
         {
           path: 'list',
           element: <UserList />
+        }
+      ]
+    },
+    {
+      path: 'orders',
+      children: [
+        {
+          path: 'list',
+          element: <OrderList />
         }
       ]
     }

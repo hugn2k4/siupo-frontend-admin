@@ -84,10 +84,7 @@ const pages = {
       title: 'Orders',
       type: 'collapse',
       icon: icons.IconShoppingCart,
-      children: [
-        { id: 'order-list', title: 'Order List', type: 'item', url: '/orders/list' },
-        { id: 'order-returns', title: 'Returns / Refunds', type: 'item', url: '/orders/returns' }
-      ]
+      children: [{ id: 'order-list', title: 'Order List', type: 'item', url: '/orders/list' }]
     },
     {
       id: 'account-settings',
