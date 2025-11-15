@@ -1,5 +1,5 @@
 // assets
-import { IconCategory2, IconKey, IconMenu, IconShoppingCart, IconTable, IconUser } from '@tabler/icons-react';
+import { IconCategory2, IconKey, IconMenu, IconSettings, IconShoppingCart, IconTable, IconUser } from '@tabler/icons-react';
 
 // constant
 const icons = {
@@ -8,7 +8,8 @@ const icons = {
   IconCategory2,
   IconUser,
   IconTable,
-  IconShoppingCart
+  IconShoppingCart,
+  IconSettings
 };
 
 // ==============================|| EXTRA PAGES MENU ITEMS ||============================== //
@@ -90,15 +91,9 @@ const pages = {
       children: [
         {
           id: 'category-list',
-          title: 'Category List',
+          title: 'List Category',
           type: 'item',
-          url: '/categories/list'
-        },
-        {
-          id: 'category-add',
-          title: 'Add New Category',
-          type: 'item',
-          url: '/categories/add'
+          url: '/categories/list-category'
         }
       ]
     },
@@ -120,6 +115,20 @@ const pages = {
       children: [
         { id: 'order-list', title: 'Order List', type: 'item', url: '/orders/list' },
         { id: 'order-returns', title: 'Returns / Refunds', type: 'item', url: '/orders/returns' }
+      ]
+    },
+    {
+      id: 'account-settings',
+      title: 'Account Settings',
+      type: 'collapse',
+      icon: icons.IconSettings,
+      children: [
+        {
+          id: 'profile',
+          title: 'Profile',
+          type: 'item',
+          url: '/account/profile'
+        }
       ]
     }
   ]

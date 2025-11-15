@@ -19,11 +19,17 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 // menu list routing
 const ListFood = Loadable(lazy(() => import('views/pages/menu/ListFood')));
 
+// category list routing
+const ListCategory = Loadable(lazy(() => import('views/pages/category/ListCategory')));
+
+//
+const AccountProfile = Loadable(lazy(() => import('views/pages/account/Profile')));
 // order table routing
 const PlaceTableGuest = Loadable(lazy(() => import('views/pages/place-table/GuestBookingManagement')));
 const PlaceTableCustomer = Loadable(lazy(() => import('views/pages/place-table/CustomerBookingManagement')));
 const NotificationManagement = Loadable(lazy(() => import('views/pages/notificationsmanage/NotificationManagement')));
 const BannerManagement = Loadable(lazy(() => import('views/pages/banner/BannerManagement')));
+const UserList = Loadable(lazy(() => import('views/pages/users/UserList')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -79,11 +85,29 @@ const MainRoutes = {
       ]
     },
     {
+      path: 'categories',
+      children: [
+        {
+          path: 'list-category',
+          element: <ListCategory />
+        }
+      ]
+    },
+    {
       path: 'notificationsmanage',
       children: [
         {
           path: 'notification-management',
           element: <NotificationManagement />
+        }
+      ]
+    },
+    {
+      path: 'account',
+      children: [
+        {
+          path: 'profile',
+          element: <AccountProfile />
         }
       ]
     },
@@ -102,6 +126,15 @@ const MainRoutes = {
     {
       path: '/sample-page',
       element: <SamplePage />
+    },
+    {
+      path: 'users',
+      children: [
+        {
+          path: 'list',
+          element: <UserList />
+        }
+      ]
     }
   ]
 };
