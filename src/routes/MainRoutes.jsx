@@ -22,6 +22,8 @@ const ListFood = Loadable(lazy(() => import('views/pages/menu/ListFood')));
 // order table routing
 const PlaceTableGuest = Loadable(lazy(() => import('views/pages/place-table/GuestBookingManagement')));
 const PlaceTableCustomer = Loadable(lazy(() => import('views/pages/place-table/CustomerBookingManagement')));
+const NotificationManagement = Loadable(lazy(() => import('views/pages/notificationsmanage/NotificationManagement')));
+const BannerManagement = Loadable(lazy(() => import('views/pages/banner/BannerManagement')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -64,6 +66,24 @@ const MainRoutes = {
         {
           path: 'place-table-for-customer',
           element: <PlaceTableCustomer />
+        }
+      ]
+    },
+    {
+      path: 'banner',
+      children: [
+        {
+          path: 'banner-management',
+          element: <BannerManagement />
+        }
+      ]
+    },
+    {
+      path: 'notificationsmanage',
+      children: [
+        {
+          path: 'notification-management',
+          element: <NotificationManagement />
         }
       ]
     },
