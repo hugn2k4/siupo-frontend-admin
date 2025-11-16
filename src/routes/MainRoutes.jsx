@@ -30,6 +30,9 @@ const PlaceTableCustomer = Loadable(lazy(() => import('views/pages/place-table/C
 const NotificationManagement = Loadable(lazy(() => import('views/pages/notificationsmanage/NotificationManagement')));
 const BannerManagement = Loadable(lazy(() => import('views/pages/banner/BannerManagement')));
 const UserList = Loadable(lazy(() => import('views/pages/users/UserList')));
+
+// orders routing
+const OrderList = Loadable(lazy(() => import('views/pages/orders/OrderList')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -133,6 +136,15 @@ const MainRoutes = {
         {
           path: 'list',
           element: <UserList />
+        }
+      ]
+    },
+    {
+      path: 'orders',
+      children: [
+        {
+          path: 'list',
+          element: <OrderList />
         }
       ]
     }
