@@ -44,7 +44,7 @@ export default function TotalOrderLineChartCard({ isLoading: propIsLoading }) {
       try {
         setIsLoading(true);
 
-        const response = await orderApi.getAllOrders({
+        const response = await orderApi.getOrders({
           page: 0,
           size: 1000,
           status: 'COMPLETED'

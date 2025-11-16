@@ -56,6 +56,34 @@ const pages = {
       ]
     },
     {
+      id: 'banner',
+      title: 'Banner Management',
+      type: 'collapse',
+      icon: icons.IconTable,
+      children: [
+        {
+          id: 'banner-management',
+          title: 'Banner Management',
+          type: 'item',
+          url: '/banner/banner-management'
+        }
+      ]
+    },
+    {
+      id: 'notifications',
+      title: 'Notification Management',
+      type: 'collapse',
+      icon: icons.IconTable,
+      children: [
+        {
+          id: 'notification-management',
+          title: 'Notification Management',
+          type: 'item',
+          url: '/notificationsmanage/notification-management'
+        }
+      ]
+    },
+    {
       id: 'categories',
       title: 'Categories',
       type: 'collapse',
@@ -84,10 +112,7 @@ const pages = {
       title: 'Orders',
       type: 'collapse',
       icon: icons.IconShoppingCart,
-      children: [
-        { id: 'order-list', title: 'Order List', type: 'item', url: '/orders/list' },
-        { id: 'order-returns', title: 'Returns / Refunds', type: 'item', url: '/orders/returns' }
-      ]
+      children: [{ id: 'order-list', title: 'Order List', type: 'item', url: '/orders/list' }]
     },
     {
       id: 'account-settings',

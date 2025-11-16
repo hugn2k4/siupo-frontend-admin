@@ -65,7 +65,7 @@ export default function TotalGrowthBarChart({ isLoading: propIsLoading }) {
         setIsLoading(true);
         setError(null);
 
-        const response = await orderApi.getAllOrders({
+        const response = await orderApi.getOrders({
           page: 0,
           size: 1000,
           status: 'COMPLETED'
