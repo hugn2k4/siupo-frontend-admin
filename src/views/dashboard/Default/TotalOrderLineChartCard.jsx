@@ -1,5 +1,7 @@
+// src/components/dashboard/TotalOrderLineChartCard.jsx
+
 import PropTypes from 'prop-types';
-import React from 'react';
+import { useEffect, useState } from 'react';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -22,17 +24,69 @@ import SkeletonTotalOrderCard from 'ui-component/cards/Skeleton/EarningCard';
 import LocalMallOutlinedIcon from '@mui/icons-material/LocalMallOutlined';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
-export default function TotalOrderLineChartCard({ isLoading }) {
+// API
+import orderApi from '../../../api/orderApi';
+
+export default function TotalOrderLineChartCard({ isLoading: propIsLoading }) {
   const theme = useTheme();
 
-  const [timeValue, setTimeValue] = React.useState(false);
+  const [timeValue, setTimeValue] = useState(false); // false = Year, true = Month
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
   const handleChangeTime = (event, newValue) => {
     setTimeValue(newValue);
   };
 
+  // === GỌI API & TÍNH TỔNG ĐƠN HOÀN THÀNH ===
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+
+        const response = await orderApi.getAllOrders({
+          page: 0,
+          size: 1000,
+          status: 'COMPLETED'
+        });
+
+        if (response.success && response.data?.content) {
+          const orders = response.data.content;
+          const filterType = timeValue ? 'month' : 'year';
+          const count = countCompletedOrders(orders, filterType);
+          setTotalOrders(count);
+        } else {
+          setTotalOrders(0);
+        }
+      } catch (err) {
+        console.error('API Error:', err);
+        setTotalOrders(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [timeValue]);
+
+  // === ĐẾM SỐ ĐƠN HOÀN THÀNH THEO THÁNG/NĂM ===
+  const countCompletedOrders = (orders, filterType) => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const getDateOnly = (iso) => iso?.split('T')[0];
+
+    if (filterType === 'month') {
+      const monthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+      return orders.filter((o) => getDateOnly(o.createdAt)?.startsWith(monthStr)).length;
+    } else {
+      return orders.filter((o) => getDateOnly(o.createdAt)?.startsWith(currentYear)).length;
+    }
+  };
+
   return (
     <>
-      {isLoading ? (
+      {isLoading || propIsLoading ? (
         <SkeletonTotalOrderCard />
       ) : (
         <MainCard
@@ -115,11 +169,9 @@ export default function TotalOrderLineChartCard({ isLoading }) {
                   <Grid size={6}>
                     <Grid container sx={{ alignItems: 'center' }}>
                       <Grid>
-                        {timeValue ? (
-                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>$108</Typography>
-                        ) : (
-                          <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>$961</Typography>
-                        )}
+                        <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>
+                          {totalOrders.toLocaleString()}
+                        </Typography>
                       </Grid>
                       <Grid>
                         <Avatar
@@ -167,4 +219,6 @@ export default function TotalOrderLineChartCard({ isLoading }) {
   );
 }
 
-TotalOrderLineChartCard.propTypes = { isLoading: PropTypes.bool };
+TotalOrderLineChartCard.propTypes = {
+  isLoading: PropTypes.bool
+};
