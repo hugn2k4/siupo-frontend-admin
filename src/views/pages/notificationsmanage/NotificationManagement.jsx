@@ -1,59 +1,57 @@
-import { useState } from 'react';
-import { Bell, Plus, Edit, Trash2, Send, Search, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bell, Plus, Send, Search, X, Users } from 'lucide-react';
+import notificationApi from '../../../api/notificationApi';
+import userApi from '../../../api/userApi';
 import './NotificationManagement.css';
 
 const NotificationManagement = () => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Khuyến mãi mùa hè 2024',
-      content: 'Giảm giá 50% cho tất cả các gói dịch vụ',
-      target: 'Tất cả khách hàng',
-      status: 'Đã gửi',
-      sendDate: '2024-06-15',
-      type: 'Khuyến mãi'
-    },
-    {
-      id: 2,
-      title: 'Bảo trì hệ thống',
-      content: 'Hệ thống sẽ bảo trì từ 2h-4h sáng ngày 20/06',
-      target: 'Khách hàng VIP',
-      status: 'Nháp',
-      sendDate: '2024-06-20',
-      type: 'Thông báo hệ thống'
-    },
-    {
-      id: 3,
-      title: 'Cập nhật chính sách',
-      content: 'Chính sách mới có hiệu lực từ ngày 01/07/2024',
-      target: 'Tất cả khách hàng',
-      status: 'Chờ gửi',
-      sendDate: '2024-07-01',
-      type: 'Chính sách'
-    }
-  ]);
-
+  const [notifications, setNotifications] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('create');
-  const [selectedNotification, setSelectedNotification] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('Tất cả');
-  const [filterType, setFilterType] = useState('Tất cả');
   const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    target: 'Tất cả khách hàng',
-    type: 'Khuyến mãi',
-    sendDate: '',
-    status: 'Nháp'
+    userId: null,
+    sendToAll: false
   });
 
-  const notificationTypes = ['Khuyến mãi', 'Thông báo hệ thống', 'Chính sách', 'Sự kiện'];
-  const targetOptions = ['Tất cả khách hàng', 'Khách hàng VIP', 'Khách hàng mới', 'Khách hàng thân thiết'];
-  const statusOptions = ['Nháp', 'Chờ gửi', 'Đã gửi'];
+  // Load dữ liệu ban đầu
+  useEffect(() => {
+    loadNotifications();
+    loadUsers();
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await notificationApi.getAllNotifications();
+      // Kiểm tra nếu data là array thì dùng trực tiếp, nếu không thì lấy từ property
+      const notifList = Array.isArray(data) ? data : data?.data || data?.notifications || [];
+      setNotifications(notifList);
+    } catch (error) {
+      console.error('Lỗi khi tải thông báo:', error);
+      alert('Không thể tải danh sách thông báo');
+      setNotifications([]); // Set empty array nếu lỗi
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const data = await userApi.getAllCustomers();
+      // Kiểm tra nếu data là array thì dùng trực tiếp, nếu không thì lấy từ property
+      const userList = Array.isArray(data) ? data : data?.data || data?.users || [];
+      setUsers(userList);
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách user:', error);
+      setUsers([]); // Set empty array nếu lỗi
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -62,104 +60,117 @@ const NotificationManagement = () => {
       newErrors.title = 'Vui lòng nhập tiêu đề';
     } else if (formData.title.length < 5) {
       newErrors.title = 'Tiêu đề phải có ít nhất 5 ký tự';
+    } else if (formData.title.length > 255) {
+      newErrors.title = 'Tiêu đề không được vượt quá 255 ký tự';
     }
 
     if (!formData.content.trim()) {
       newErrors.content = 'Vui lòng nhập nội dung';
     } else if (formData.content.length < 10) {
       newErrors.content = 'Nội dung phải có ít nhất 10 ký tự';
+    } else if (formData.content.length > 2000) {
+      newErrors.content = 'Nội dung không được vượt quá 2000 ký tự';
     }
 
-    if (!formData.sendDate) {
-      newErrors.sendDate = 'Vui lòng chọn ngày gửi';
+    if (!formData.sendToAll && !formData.userId) {
+      newErrors.userId = 'Vui lòng chọn người nhận hoặc gửi cho tất cả';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleOpenModal = (mode, notification = null) => {
-    setModalMode(mode);
+  const handleOpenModal = () => {
     setErrors({});
-
-    if (mode === 'edit' && notification) {
-      setSelectedNotification(notification);
-      setFormData({
-        title: notification.title,
-        content: notification.content,
-        target: notification.target,
-        type: notification.type,
-        sendDate: notification.sendDate,
-        status: notification.status
-      });
-    } else {
-      setFormData({
-        title: '',
-        content: '',
-        target: 'Tất cả khách hàng',
-        type: 'Khuyến mãi',
-        sendDate: '',
-        status: 'Nháp'
-      });
-    }
-
+    setFormData({
+      title: '',
+      content: '',
+      userId: null,
+      sendToAll: false
+    });
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setSelectedNotification(null);
     setErrors({});
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
-    if (modalMode === 'create') {
-      const newNotification = {
-        id: notifications.length + 1,
-        ...formData
+    try {
+      setLoading(true);
+
+      const requestData = {
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        sendToAll: formData.sendToAll,
+        userId: formData.sendToAll ? null : formData.userId
       };
-      setNotifications([...notifications, newNotification]);
-    } else {
-      setNotifications(notifications.map((n) => (n.id === selectedNotification.id ? { ...n, ...formData } : n)));
+
+      await notificationApi.createNotification(requestData);
+
+      alert(formData.sendToAll ? 'Đã gửi thông báo thành công đến tất cả người dùng!' : 'Đã tạo thông báo thành công!');
+
+      handleCloseModal();
+      loadNotifications(); // Reload danh sách
+    } catch (error) {
+      console.error('Lỗi khi tạo thông báo:', error);
+      alert(error.response?.data?.message || 'Không thể tạo thông báo. Vui lòng thử lại!');
+    } finally {
+      setLoading(false);
     }
-
-    handleCloseModal();
   };
 
-  const handleSendNotification = (notification) => {
-    setNotifications(notifications.map((n) => (n.id === notification.id ? { ...n, status: 'Đã gửi' } : n)));
-  };
-
-  const handleDeleteNotification = () => {
-    setNotifications(notifications.filter((n) => n.id !== selectedNotification.id));
-    setShowDeleteModal(false);
-    setSelectedNotification(null);
+  const handleTargetChange = (value) => {
+    if (value === 'all') {
+      setFormData({
+        ...formData,
+        sendToAll: true,
+        userId: null
+      });
+    } else {
+      setFormData({
+        ...formData,
+        sendToAll: false,
+        userId: value ? parseInt(value) : null
+      });
+    }
   };
 
   const filteredNotifications = notifications.filter((notification) => {
     const matchSearch =
-      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notification.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = filterStatus === 'Tất cả' || notification.status === filterStatus;
-    const matchType = filterType === 'Tất cả' || notification.type === filterType;
-
-    return matchSearch && matchStatus && matchType;
+      notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      notification.content?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchSearch;
   });
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Đã gửi':
+      case 'READ':
         return 'status-sent';
-      case 'Chờ gửi':
+      case 'UNREAD':
         return 'status-pending';
-      case 'Nháp':
+      case 'DELETED':
         return 'status-draft';
       default:
         return 'status-draft';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'READ':
+        return 'Đã đọc';
+      case 'UNREAD':
+        return 'Chưa đọc';
+      case 'DELETED':
+        return 'Đã xóa';
+      default:
+        return status;
     }
   };
 
@@ -178,14 +189,14 @@ const NotificationManagement = () => {
                 <p className="page-subtitle">Tạo và quản lý thông báo gửi đến khách hàng</p>
               </div>
             </div>
-            <button onClick={() => handleOpenModal('create')} className="btn-create">
+            <button onClick={handleOpenModal} className="btn-create" disabled={loading}>
               <Plus className="icon" />
               Tạo thông báo mới
             </button>
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Search Filter */}
         <div className="filter-card">
           <div className="filter-grid">
             <div className="search-wrapper">
@@ -200,127 +211,86 @@ const NotificationManagement = () => {
                 />
               </div>
             </div>
-            <div>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="filter-select">
-                <option value="Tất cả">Tất cả trạng thái</option>
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="filter-select">
-                <option value="Tất cả">Tất cả loại</option>
-                {notificationTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
         </div>
 
         {/* Notifications Table */}
         <div className="table-card">
           <div className="table-wrapper">
-            <table className="notification-table">
-              <thead>
-                <tr>
-                  <th>Tiêu đề</th>
-                  <th>Loại</th>
-                  <th>Đối tượng</th>
-                  <th>Ngày gửi</th>
-                  <th>Trạng thái</th>
-                  <th className="text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredNotifications.length === 0 ? (
+            {loading ? (
+              <div className="loading-state">Đang tải...</div>
+            ) : (
+              <table className="notification-table">
+                <thead>
                   <tr>
-                    <td colSpan="6" className="empty-state">
-                      Không tìm thấy thông báo nào
-                    </td>
+                    <th>Tiêu đề</th>
+                    <th>Người nhận</th>
+                    <th>Ngày gửi</th>
+                    <th>Trạng thái</th>
                   </tr>
-                ) : (
-                  filteredNotifications.map((notification) => (
-                    <tr key={notification.id}>
-                      <td>
-                        <div>
-                          <div className="notification-title">{notification.title}</div>
-                          <div className="notification-content">{notification.content}</div>
-                        </div>
-                      </td>
-                      <td className="cell-text">{notification.type}</td>
-                      <td className="cell-text">{notification.target}</td>
-                      <td className="cell-text">{new Date(notification.sendDate).toLocaleDateString('vi-VN')}</td>
-                      <td>
-                        <span className={`status-badge ${getStatusClass(notification.status)}`}>{notification.status}</span>
-                      </td>
-                      <td>
-                        <div className="action-buttons">
-                          {notification.status !== 'Đã gửi' && (
-                            <button
-                              onClick={() => handleSendNotification(notification)}
-                              className="action-btn action-btn-send"
-                              title="Gửi thông báo"
-                            >
-                              <Send className="action-icon" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleOpenModal('edit', notification)}
-                            className="action-btn action-btn-edit"
-                            title="Chỉnh sửa"
-                          >
-                            <Edit className="action-icon" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedNotification(notification);
-                              setShowDeleteModal(true);
-                            }}
-                            className="action-btn action-btn-delete"
-                            title="Xóa"
-                          >
-                            <Trash2 className="action-icon" />
-                          </button>
-                        </div>
+                </thead>
+                <tbody>
+                  {filteredNotifications.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="empty-state">
+                        {searchTerm ? 'Không tìm thấy thông báo nào' : 'Chưa có thông báo nào'}
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredNotifications.map((notification) => (
+                      <tr key={notification.id}>
+                        <td>
+                          <div>
+                            <div className="notification-title">{notification.title}</div>
+                            <div className="notification-content">{notification.content}</div>
+                          </div>
+                        </td>
+                        <td className="cell-text">
+                          {(Array.isArray(users) && users.find((u) => u.id === notification.userId)?.fullName) || 'N/A'}
+                        </td>
+                        <td className="cell-text">{notification.sentAt ? new Date(notification.sentAt).toLocaleString('vi-VN') : 'N/A'}</td>
+                        <td>
+                          <span className={`status-badge ${getStatusClass(notification.status)}`}>
+                            {getStatusText(notification.status)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
         {/* Summary Stats */}
-        <div className="stats-grid">
+        {/* <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-label">Tổng thông báo</div>
             <div className="stat-value">{notifications.length}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Đã gửi</div>
-            <div className="stat-value stat-value-success">{notifications.filter((n) => n.status === 'Đã gửi').length}</div>
+            <div className="stat-label">Đã đọc</div>
+            <div className="stat-value stat-value-success">
+              {notifications.filter((n) => n.status === 'READ').length}
+            </div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Chờ gửi</div>
-            <div className="stat-value stat-value-warning">{notifications.filter((n) => n.status === 'Chờ gửi').length}</div>
+            <div className="stat-label">Chưa đọc</div>
+            <div className="stat-value stat-value-warning">
+              {notifications.filter((n) => n.status === 'UNREAD').length}
+            </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Create Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h2 className="modal-title">{modalMode === 'create' ? 'Tạo thông báo mới' : 'Chỉnh sửa thông báo'}</h2>
-              <button onClick={handleCloseModal} className="modal-close">
+              <h2 className="modal-title">Tạo thông báo mới</h2>
+              <button onClick={handleCloseModal} className="modal-close" disabled={loading}>
                 <X className="icon" />
               </button>
             </div>
@@ -336,8 +306,11 @@ const NotificationManagement = () => {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className={`form-input ${errors.title ? 'input-error' : ''}`}
                   placeholder="Nhập tiêu đề thông báo"
+                  maxLength={255}
+                  disabled={loading}
                 />
                 {errors.title && <p className="error-text">{errors.title}</p>}
+                <p className="help-text">{formData.title.length}/255 ký tự</p>
               </div>
 
               <div className="form-group">
@@ -350,106 +323,59 @@ const NotificationManagement = () => {
                   rows="4"
                   className={`form-textarea ${errors.content ? 'input-error' : ''}`}
                   placeholder="Nhập nội dung thông báo"
+                  maxLength={2000}
+                  disabled={loading}
                 />
                 {errors.content && <p className="error-text">{errors.content}</p>}
+                <p className="help-text">{formData.content.length}/2000 ký tự</p>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Loại thông báo</label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="form-select"
-                  >
-                    {notificationTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Đối tượng</label>
-                  <select
-                    value={formData.target}
-                    onChange={(e) => setFormData({ ...formData, target: e.target.value })}
-                    className="form-select"
-                  >
-                    {targetOptions.map((target) => (
-                      <option key={target} value={target}>
-                        {target}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="form-group">
+                <label className="form-label">
+                  Người nhận <span className="required">*</span>
+                </label>
+                <select
+                  value={formData.sendToAll ? 'all' : formData.userId || ''}
+                  onChange={(e) => handleTargetChange(e.target.value)}
+                  className={`form-select ${errors.userId ? 'input-error' : ''}`}
+                  disabled={loading}
+                >
+                  <option value="">-- Chọn người nhận --</option>
+                  <option value="all">Tất cả người dùng ({Array.isArray(users) ? users.length : 0} người)</option>
+                  <optgroup label="Người dùng cụ thể">
+                    {Array.isArray(users) &&
+                      users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.fullName} ({user.email})
+                        </option>
+                      ))}
+                  </optgroup>
+                </select>
+                {errors.userId && <p className="error-text">{errors.userId}</p>}
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">
-                    Ngày gửi <span className="required">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.sendDate}
-                    onChange={(e) => setFormData({ ...formData, sendDate: e.target.value })}
-                    className={`form-input ${errors.sendDate ? 'input-error' : ''}`}
-                  />
-                  {errors.sendDate && <p className="error-text">{errors.sendDate}</p>}
+              {formData.sendToAll && (
+                <div className="alert-info">
+                  <Users className="icon" />
+                  <span>Thông báo sẽ được gửi đến tất cả {Array.isArray(users) ? users.length : 0} người dùng</span>
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">Trạng thái</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="form-select"
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              )}
 
               <div className="modal-actions">
-                <button onClick={handleCloseModal} className="btn-cancel">
+                <button onClick={handleCloseModal} className="btn-cancel" disabled={loading}>
                   Hủy
                 </button>
-                <button onClick={handleSubmit} className="btn-submit">
-                  {modalMode === 'create' ? 'Tạo thông báo' : 'Lưu thay đổi'}
+                <button onClick={handleSubmit} className="btn-submit" disabled={loading}>
+                  {loading ? (
+                    'Đang xử lý...'
+                  ) : (
+                    <>
+                      <Send className="icon" />
+                      {formData.sendToAll ? 'Gửi đến tất cả' : 'Tạo thông báo'}
+                    </>
+                  )}
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="modal-overlay">
-          <div className="modal-content modal-small">
-            <h3 className="delete-title">Xác nhận xóa</h3>
-            <p className="delete-text">
-              Bạn có chắc chắn muốn xóa thông báo "{selectedNotification?.title}"? Hành động này không thể hoàn tác.
-            </p>
-            <div className="modal-actions">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setSelectedNotification(null);
-                }}
-                className="btn-cancel"
-              >
-                Hủy
-              </button>
-              <button onClick={handleDeleteNotification} className="btn-delete">
-                Xóa thông báo
-              </button>
             </div>
           </div>
         </div>

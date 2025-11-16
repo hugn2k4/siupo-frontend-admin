@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Image as ImageIcon, Save, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Image as ImageIcon, Save, X, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import bannerApi from '../../../api/bannerApi';
 import uploadApi from '../../../api/uploadApi';
 
@@ -10,10 +10,20 @@ const BannerManagement = () => {
   const [currentBanner, setCurrentBanner] = useState(null);
   const [formData, setFormData] = useState({ name: '', url: '', position: '' });
   const [uploading, setUploading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     fetchBanners();
   }, []);
+
+  // Notification system
+  const showNotification = (message, type = 'success') => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }, 3000);
+  };
 
   const fetchBanners = async () => {
     setLoading(true);
@@ -22,7 +32,7 @@ const BannerManagement = () => {
       setBanners(response.data);
     } catch (error) {
       console.error('Error fetching banners:', error);
-      alert('Lỗi khi tải danh sách banner');
+      showNotification('Lỗi khi tải danh sách banner', 'error');
     } finally {
       setLoading(false);
     }
@@ -48,11 +58,11 @@ const BannerManagement = () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa banner này?')) {
       try {
         await bannerApi.delete(id);
-        alert('Xóa banner thành công');
+        showNotification('Xóa banner thành công', 'success');
         fetchBanners();
       } catch (error) {
         console.error('Error deleting banner:', error);
-        alert('Lỗi khi xóa banner');
+        showNotification('Lỗi khi xóa banner', 'error');
       }
     }
   };
@@ -60,14 +70,17 @@ const BannerManagement = () => {
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      setFormData((prev) => ({ ...prev, url: '' }));
       setUploading(true);
       try {
         const response = await uploadApi.uploadSingle(file);
-        setFormData((prev) => ({ ...prev, url: response.data }));
-        alert('Upload hình ảnh thành công');
+        const newUrl = response;
+        setFormData((prev) => ({ ...prev, url: newUrl }));
+        showNotification('Upload hình ảnh thành công', 'success');
+        e.target.value = '';
       } catch (error) {
         console.error('Error uploading file:', error);
-        alert('Lỗi khi upload hình ảnh');
+        showNotification('Lỗi khi upload hình ảnh', 'error');
       } finally {
         setUploading(false);
       }
@@ -86,24 +99,41 @@ const BannerManagement = () => {
     try {
       if (currentBanner) {
         await bannerApi.update(currentBanner.id, payload);
-        alert('Cập nhật banner thành công');
+        showNotification('Cập nhật banner thành công', 'success');
       } else {
         await bannerApi.create(payload);
-        alert('Thêm banner thành công');
+        showNotification('Thêm banner thành công', 'success');
       }
       setIsModalOpen(false);
       fetchBanners();
     } catch (error) {
       console.error('Error saving banner:', error);
-      alert(error.response?.data?.message || 'Lỗi khi lưu banner');
+      showNotification(error.response?.data?.message || 'Lỗi khi lưu banner', 'error');
     }
   };
 
-  // const activeBanners = banners.filter(b => b.isActive).length;
-  // const inactiveBanners = banners.length - activeBanners;
-
   return (
     <div style={styles.container}>
+      {/* Notifications */}
+      <div style={styles.notificationContainer}>
+        {notifications.map((notif) => (
+          <div
+            key={notif.id}
+            style={{
+              ...styles.notification,
+              ...(notif.type === 'success' ? styles.notificationSuccess : {}),
+              ...(notif.type === 'error' ? styles.notificationError : {}),
+              ...(notif.type === 'warning' ? styles.notificationWarning : {})
+            }}
+          >
+            {notif.type === 'success' && <CheckCircle size={20} />}
+            {notif.type === 'error' && <XCircle size={20} />}
+            {notif.type === 'warning' && <AlertCircle size={20} />}
+            <span>{notif.message}</span>
+          </div>
+        ))}
+      </div>
+
       {/* Header */}
       <div style={styles.header}>
         <div>
@@ -122,14 +152,6 @@ const BannerManagement = () => {
           <div style={styles.statLabel}>Tổng Banner</div>
           <div style={styles.statValue}>{banners.length}</div>
         </div>
-        {/* <div style={{...styles.statCard, ...styles.statCardActive}}>
-          <div style={styles.statLabel}>Đang Hiển Thị</div>
-          <div style={styles.statValue}>{activeBanners}</div>
-        </div>
-        <div style={{...styles.statCard, ...styles.statCardInactive}}>
-          <div style={styles.statLabel}>Đã Ẩn</div>
-          <div style={styles.statValue}>{inactiveBanners}</div>
-        </div> */}
       </div>
 
       {/* Banner List */}
@@ -215,7 +237,7 @@ const BannerManagement = () => {
               <div style={styles.formGroup}>
                 <label style={styles.label}>Upload Hình Ảnh</label>
                 <input type="file" accept="image/*" onChange={handleFileChange} style={styles.input} disabled={uploading} />
-                {uploading && <small style={styles.helpText}>Đang upload...</small>}
+                {uploading && <small style={{ ...styles.helpText, color: '#3b82f6' }}>⏳ Đang upload...</small>}
                 {!uploading && <small style={styles.helpText}>Hoặc nhập URL bên dưới</small>}
               </div>
 
@@ -228,7 +250,9 @@ const BannerManagement = () => {
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                   placeholder="https://example.com/banner.jpg"
                   required
+                  key={formData.url}
                 />
+                {formData.url && <small style={{ ...styles.helpText, color: '#10b981', marginTop: '4px' }}>✓ URL đã được cập nhật</small>}
               </div>
 
               <div style={styles.formGroup}>
@@ -286,6 +310,39 @@ const styles = {
     minHeight: '100vh',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },
+  notificationContainer: {
+    position: 'fixed',
+    top: '24px',
+    right: '24px',
+    zIndex: 9999,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  notification: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px 20px',
+    borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    minWidth: '300px',
+    animation: 'slideIn 0.3s ease-out',
+    fontWeight: '500',
+    fontSize: '14px'
+  },
+  notificationSuccess: {
+    backgroundColor: '#10b981',
+    color: 'white'
+  },
+  notificationError: {
+    backgroundColor: '#ef4444',
+    color: 'white'
+  },
+  notificationWarning: {
+    backgroundColor: '#f59e0b',
+    color: 'white'
+  },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -331,12 +388,6 @@ const styles = {
     borderRadius: '12px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
     border: '1px solid #e5e7eb'
-  },
-  statCardActive: {
-    borderLeft: '4px solid #10b981'
-  },
-  statCardInactive: {
-    borderLeft: '4px solid #f59e0b'
   },
   statLabel: {
     fontSize: '14px',
@@ -392,18 +443,6 @@ const styles = {
     fontSize: '14px',
     color: '#1f2937'
   },
-  positionBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '32px',
-    height: '32px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    borderRadius: '50%',
-    fontWeight: '600',
-    fontSize: '14px'
-  },
   imageContainer: {
     width: '80px',
     height: '50px',
@@ -420,24 +459,6 @@ const styles = {
     fontWeight: '500',
     color: '#1f2937'
   },
-  activeChip: {
-    display: 'inline-block',
-    padding: '4px 12px',
-    backgroundColor: '#d1fae5',
-    color: '#065f46',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: '600'
-  },
-  inactiveChip: {
-    display: 'inline-block',
-    padding: '4px 12px',
-    backgroundColor: '#fed7aa',
-    color: '#92400e',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: '600'
-  },
   dateText: {
     color: '#6b7280',
     fontSize: '13px'
@@ -449,30 +470,6 @@ const styles = {
   actionBtnPrimary: {
     padding: '8px',
     backgroundColor: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s'
-  },
-  actionBtnSuccess: {
-    padding: '8px',
-    backgroundColor: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s'
-  },
-  actionBtnWarning: {
-    padding: '8px',
-    backgroundColor: '#f59e0b',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
