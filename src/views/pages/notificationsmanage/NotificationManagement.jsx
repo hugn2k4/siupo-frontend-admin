@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Plus, Send, Search, X, Users } from 'lucide-react';
+import { Bell, Plus, Send, Search, X, Users, User } from 'lucide-react';
 import notificationApi from '../../../api/notificationApi';
 import userApi from '../../../api/userApi';
 import './NotificationManagement.css';
@@ -10,13 +10,14 @@ const NotificationManagement = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState(''); // Search trong modal
   const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     userId: null,
-    sendToAll: false
+    sendToAll: true // Mặc định chọn "Gửi cho tất cả"
   });
 
   // Load dữ liệu ban đầu
@@ -29,13 +30,12 @@ const NotificationManagement = () => {
     try {
       setLoading(true);
       const data = await notificationApi.getAllNotifications();
-      // Kiểm tra nếu data là array thì dùng trực tiếp, nếu không thì lấy từ property
       const notifList = Array.isArray(data) ? data : data?.data || data?.notifications || [];
       setNotifications(notifList);
     } catch (error) {
       console.error('Lỗi khi tải thông báo:', error);
       alert('Không thể tải danh sách thông báo');
-      setNotifications([]); // Set empty array nếu lỗi
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -44,12 +44,11 @@ const NotificationManagement = () => {
   const loadUsers = async () => {
     try {
       const data = await userApi.getAllCustomers();
-      // Kiểm tra nếu data là array thì dùng trực tiếp, nếu không thì lấy từ property
       const userList = Array.isArray(data) ? data : data?.data || data?.users || [];
       setUsers(userList);
     } catch (error) {
       console.error('Lỗi khi tải danh sách user:', error);
-      setUsers([]); // Set empty array nếu lỗi
+      setUsers([]);
     }
   };
 
@@ -73,7 +72,7 @@ const NotificationManagement = () => {
     }
 
     if (!formData.sendToAll && !formData.userId) {
-      newErrors.userId = 'Vui lòng chọn người nhận hoặc gửi cho tất cả';
+      newErrors.userId = 'Vui lòng chọn người nhận';
     }
 
     setErrors(newErrors);
@@ -82,11 +81,12 @@ const NotificationManagement = () => {
 
   const handleOpenModal = () => {
     setErrors({});
+    setUserSearchTerm('');
     setFormData({
       title: '',
       content: '',
       userId: null,
-      sendToAll: false
+      sendToAll: true
     });
     setShowModal(true);
   };
@@ -94,6 +94,7 @@ const NotificationManagement = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setErrors({});
+    setUserSearchTerm('');
   };
 
   const handleSubmit = async () => {
@@ -116,7 +117,7 @@ const NotificationManagement = () => {
       alert(formData.sendToAll ? 'Đã gửi thông báo thành công đến tất cả người dùng!' : 'Đã tạo thông báo thành công!');
 
       handleCloseModal();
-      loadNotifications(); // Reload danh sách
+      loadNotifications();
     } catch (error) {
       console.error('Lỗi khi tạo thông báo:', error);
       alert(error.response?.data?.message || 'Không thể tạo thông báo. Vui lòng thử lại!');
@@ -125,21 +126,31 @@ const NotificationManagement = () => {
     }
   };
 
-  const handleTargetChange = (value) => {
-    if (value === 'all') {
-      setFormData({
-        ...formData,
-        sendToAll: true,
-        userId: null
-      });
-    } else {
-      setFormData({
-        ...formData,
-        sendToAll: false,
-        userId: value ? parseInt(value) : null
-      });
-    }
+  // Xử lý khi chọn "Gửi cho tất cả"
+  const handleSendToAllChange = () => {
+    setFormData({
+      ...formData,
+      sendToAll: true,
+      userId: null
+    });
+    setErrors({ ...errors, userId: undefined });
   };
+
+  // Xử lý khi chọn user cụ thể
+  const handleSelectUser = (userId) => {
+    setFormData({
+      ...formData,
+      sendToAll: false,
+      userId: userId
+    });
+    setErrors({ ...errors, userId: undefined });
+  };
+
+  // Filter users theo search term
+  const filteredUsers = users.filter((user) => {
+    const searchLower = userSearchTerm.toLowerCase();
+    return user.fullName?.toLowerCase().includes(searchLower) || user.email?.toLowerCase().includes(searchLower);
+  });
 
   const filteredNotifications = notifications.filter((notification) => {
     const matchSearch =
@@ -202,13 +213,7 @@ const NotificationManagement = () => {
             <div className="search-wrapper">
               <div className="search-input-wrapper">
                 <Search className="search-icon" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm thông báo..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-input"
-                />
+                <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="search-input" />
               </div>
             </div>
           </div>
@@ -246,7 +251,9 @@ const NotificationManagement = () => {
                           </div>
                         </td>
                         <td className="cell-text">
-                          {(Array.isArray(users) && users.find((u) => u.id === notification.userId)?.fullName) || 'N/A'}
+                          {notification.isGlobal
+                            ? 'Tất cả người dùng'
+                            : (Array.isArray(users) && users.find((u) => u.id === notification.userId)?.fullName) || 'N/A'}
                         </td>
                         <td className="cell-text">{notification.sentAt ? new Date(notification.sentAt).toLocaleString('vi-VN') : 'N/A'}</td>
                         <td>
@@ -262,32 +269,12 @@ const NotificationManagement = () => {
             )}
           </div>
         </div>
-
-        {/* Summary Stats */}
-        {/* <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-label">Tổng thông báo</div>
-            <div className="stat-value">{notifications.length}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Đã đọc</div>
-            <div className="stat-value stat-value-success">
-              {notifications.filter((n) => n.status === 'READ').length}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Chưa đọc</div>
-            <div className="stat-value stat-value-warning">
-              {notifications.filter((n) => n.status === 'UNREAD').length}
-            </div>
-          </div>
-        </div> */}
       </div>
 
       {/* Create Modal */}
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content modal-large">
             <div className="modal-header">
               <h2 className="modal-title">Tạo thông báo mới</h2>
               <button onClick={handleCloseModal} className="modal-close" disabled={loading}>
@@ -334,32 +321,100 @@ const NotificationManagement = () => {
                 <label className="form-label">
                   Người nhận <span className="required">*</span>
                 </label>
-                <select
-                  value={formData.sendToAll ? 'all' : formData.userId || ''}
-                  onChange={(e) => handleTargetChange(e.target.value)}
-                  className={`form-select ${errors.userId ? 'input-error' : ''}`}
-                  disabled={loading}
-                >
-                  <option value="">-- Chọn người nhận --</option>
-                  <option value="all">Tất cả người dùng ({Array.isArray(users) ? users.length : 0} người)</option>
-                  <optgroup label="Người dùng cụ thể">
-                    {Array.isArray(users) &&
-                      users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.fullName} ({user.email})
-                        </option>
-                      ))}
-                  </optgroup>
-                </select>
+
+                {/* Radio: Gửi cho tất cả */}
+                <div className="radio-group">
+                  <label className={`radio-card ${formData.sendToAll ? 'radio-card-selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="recipient"
+                      checked={formData.sendToAll}
+                      onChange={handleSendToAllChange}
+                      disabled={loading}
+                      className="radio-input"
+                    />
+                    <div className="radio-content">
+                      <Users className="radio-icon" />
+                      <div>
+                        <div className="radio-label">Gửi cho tất cả</div>
+                        <div className="radio-description">
+                          Thông báo sẽ được gửi đến tất cả {Array.isArray(users) ? users.length : 0} người dùng
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Radio: Chọn người dùng cụ thể */}
+                <div className="radio-group">
+                  <label className={`radio-card ${!formData.sendToAll ? 'radio-card-selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="recipient"
+                      checked={!formData.sendToAll}
+                      onChange={() => setFormData({ ...formData, sendToAll: false })}
+                      disabled={loading}
+                      className="radio-input"
+                    />
+                    <div className="radio-content">
+                      <User className="radio-icon" />
+                      <div>
+                        <div className="radio-label">Chọn người dùng cụ thể</div>
+                        <div className="radio-description">Chọn một người dùng từ danh sách bên dưới</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Danh sách users khi chọn "Người dùng cụ thể" */}
+                {!formData.sendToAll && (
+                  <div className="user-list-container">
+                    {/* Search users */}
+                    <div className="user-search-wrapper">
+                      <Search className="search-icon-small" />
+                      <input
+                        type="text"
+                        placeholder="Tìm kiếm người dùng..."
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        className="user-search-input"
+                        disabled={loading}
+                      />
+                    </div>
+
+                    {/* User list */}
+                    <div className="user-list">
+                      {filteredUsers.length === 0 ? (
+                        <div className="user-list-empty">
+                          {userSearchTerm ? 'Không tìm thấy người dùng nào' : 'Không có người dùng nào'}
+                        </div>
+                      ) : (
+                        filteredUsers.map((user) => (
+                          <label key={user.id} className={`user-item ${formData.userId === user.id ? 'user-item-selected' : ''}`}>
+                            <input
+                              type="radio"
+                              name="selectedUser"
+                              checked={formData.userId === user.id}
+                              onChange={() => handleSelectUser(user.id)}
+                              disabled={loading}
+                              className="user-radio"
+                            />
+                            <div className="user-info">
+                              <div className="user-avatar">{user.fullName?.charAt(0).toUpperCase() || 'U'}</div>
+                              <div className="user-details">
+                                <div className="user-name">{user.fullName || 'Unnamed'}</div>
+                                <div className="user-email">{user.email || 'No email'}</div>
+                              </div>
+                            </div>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {errors.userId && <p className="error-text">{errors.userId}</p>}
               </div>
-
-              {formData.sendToAll && (
-                <div className="alert-info">
-                  <Users className="icon" />
-                  <span>Thông báo sẽ được gửi đến tất cả {Array.isArray(users) ? users.length : 0} người dùng</span>
-                </div>
-              )}
 
               <div className="modal-actions">
                 <button onClick={handleCloseModal} className="btn-cancel" disabled={loading}>
