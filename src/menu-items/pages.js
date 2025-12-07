@@ -1,5 +1,5 @@
 // assets
-import { IconCategory2, IconKey, IconMenu, IconSettings, IconShoppingCart, IconTable, IconUser } from '@tabler/icons-react';
+import { IconCategory2, IconKey, IconMenu, IconSettings, IconShoppingCart, IconTable, IconUser, IconPackage } from '@tabler/icons-react';
 
 // constant
 const icons = {
@@ -9,7 +9,8 @@ const icons = {
   IconUser,
   IconTable,
   IconShoppingCart,
-  IconSettings
+  IconSettings,
+  IconPackage
 };
 
 // ==============================|| EXTRA PAGES MENU ITEMS ||============================== //
@@ -32,6 +33,20 @@ const pages = {
           title: 'List Food',
           type: 'item',
           url: '/menu/list-food'
+        }
+      ]
+    },
+    {
+      id: 'combos',
+      title: 'Combo',
+      type: 'collapse',
+      icon: icons.IconPackage,
+      children: [
+        {
+          id: 'combo-list',
+          title: 'List Combo',
+          type: 'item',
+          url: '/combos/list-combo'
         }
       ]
     },
