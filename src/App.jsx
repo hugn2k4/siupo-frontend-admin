@@ -8,6 +8,7 @@ import NavigationScroll from 'layout/NavigationScroll';
 
 import ThemeCustomization from 'themes';
 
+import AuthHandlerInitializer from 'components/AuthHandlerInitializer';
 import { GlobalProvider } from 'contexts/GlobalProvider';
 import { SnackbarProvider } from 'contexts/SnackbarProvider';
 
@@ -21,9 +22,9 @@ export default function App() {
       <NavigationScroll>
         <SnackbarProvider>
           <GlobalProvider>
-            <>
+            <AuthHandlerInitializer>
               <RouterProvider router={router} />
-            </>
+            </AuthHandlerInitializer>
           </GlobalProvider>
         </SnackbarProvider>
       </NavigationScroll>
