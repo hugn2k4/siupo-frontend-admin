@@ -8,7 +8,6 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import EventIcon from '@mui/icons-material/Event';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import PhoneIcon from '@mui/icons-material/Phone';
 import SearchIcon from '@mui/icons-material/Search';
 
 const GuestBookingManagement = () => {
@@ -17,11 +16,10 @@ const GuestBookingManagement = () => {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [phoneSearch, setPhoneSearch] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalAction, setModalAction] = useState(''); // 'view', 'confirm', 'deny', 'complete'
+  const [modalAction, setModalAction] = useState('');
   const [note, setNote] = useState('');
   const [statistics, setStatistics] = useState({ total: 0, pending: 0, confirmed: 0, completed: 0, denied: 0 });
   const [actionLoading, setActionLoading] = useState(false);
@@ -34,7 +32,8 @@ const GuestBookingManagement = () => {
 
   useEffect(() => {
     filterBookings();
-  }, [bookings, selectedStatus, searchTerm, phoneSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings, selectedStatus, searchTerm]);
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -86,7 +85,12 @@ const GuestBookingManagement = () => {
 
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter((b) => b.fullname?.toLowerCase().includes(searchLower) || b.email?.toLowerCase().includes(searchLower));
+      filtered = filtered.filter(
+        (b) =>
+          b.fullname?.toLowerCase().includes(searchLower) ||
+          b.email?.toLowerCase().includes(searchLower) ||
+          b.phoneNumber?.includes(searchTerm) // Thêm dòng này để tìm cả SĐT
+      );
     }
 
     if (phoneSearch) {
@@ -166,33 +170,6 @@ const GuestBookingManagement = () => {
     }
   };
 
-  const searchByPhone = async () => {
-    if (!phoneSearch) {
-      alert('Vui lòng nhập số điện thoại');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await managePlaceTable.getGuestBookingsByPhone(phoneSearch);
-      setBookings(data);
-    } catch (error) {
-      console.error('Error searching by phone:', error);
-      setError('Không thể tìm kiếm theo số điện thoại. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const clearFilters = () => {
-    setDateRange({ start: '', end: '' });
-    setSearchTerm('');
-    setPhoneSearch('');
-    setSelectedStatus('all');
-    fetchBookings();
-    fetchStatistics();
-  };
-
   const closeModal = () => {
     setShowModal(false);
     setSelectedBooking(null);
@@ -216,7 +193,7 @@ const GuestBookingManagement = () => {
     };
     const config = statusConfig[status] || statusConfig.PENDING;
     return (
-      <span className={`status-badge ${config.class}`}>
+      <span className={`guest-status-badge ${config.class}`}>
         {config.icon} {config.label}
       </span>
     );
@@ -238,73 +215,55 @@ const GuestBookingManagement = () => {
     <div className="guest-booking-container">
       <div className="guest-booking-wrapper">
         <div className="guest-booking-header">
-          <h1 className="header-title">Quản lý đơn đặt bàn - Khách vãng lai</h1>
+          <h1 className="guest-header-title">Quản lý đơn đặt bàn - Khách vãng lai</h1>
 
           {error && (
-            <div className="error-alert">
-              <span className="error-icon">⚠</span>
-              <span className="error-message">{error}</span>
+            <div className="guest-error-alert">
+              <span className="guest-error-icon">⚠</span>
+              <span className="guest-error-message">{error}</span>
             </div>
           )}
 
           {statistics && (
-            <div className="statistics-grid">
-              <div className="stat-card total">
-                <p className="stat-label total">Tổng số</p>
-                <p className="stat-value total">{statistics.total}</p>
+            <div className="guest-statistics-grid">
+              <div className="guest-stat-card total">
+                <p className="guest-stat-label total">Tổng số</p>
+                <p className="guest-stat-value total">{statistics.total}</p>
               </div>
-              <div className="stat-card pending clickable" onClick={() => setSelectedStatus('PENDING')}>
-                <p className="stat-label pending">Chờ xác nhận</p>
-                <p className="stat-value pending">{statistics.pending}</p>
+              <div className="guest-stat-card pending clickable" onClick={() => setSelectedStatus('PENDING')}>
+                <p className="guest-stat-label pending">Chờ xác nhận</p>
+                <p className="guest-stat-value pending">{statistics.pending}</p>
               </div>
-              <div className="stat-card confirmed clickable" onClick={() => setSelectedStatus('CONFIRMED')}>
-                <p className="stat-label confirmed">Đã xác nhận</p>
-                <p className="stat-value confirmed">{statistics.confirmed}</p>
+              <div className="guest-stat-card confirmed clickable" onClick={() => setSelectedStatus('CONFIRMED')}>
+                <p className="guest-stat-label confirmed">Đã xác nhận</p>
+                <p className="guest-stat-value confirmed">{statistics.confirmed}</p>
               </div>
-              <div className="stat-card completed clickable" onClick={() => setSelectedStatus('COMPLETED')}>
-                <p className="stat-label completed">Hoàn thành</p>
-                <p className="stat-value completed">{statistics.completed}</p>
+              <div className="guest-stat-card completed clickable" onClick={() => setSelectedStatus('COMPLETED')}>
+                <p className="guest-stat-label completed">Hoàn thành</p>
+                <p className="guest-stat-value completed">{statistics.completed}</p>
               </div>
-              <div className="stat-card denied clickable" onClick={() => setSelectedStatus('DENIED')}>
-                <p className="stat-label denied">Từ chối</p>
-                <p className="stat-value denied">{statistics.denied}</p>
+              <div className="guest-stat-card denied clickable" onClick={() => setSelectedStatus('DENIED')}>
+                <p className="guest-stat-label denied">Từ chối</p>
+                <p className="guest-stat-value denied">{statistics.denied}</p>
               </div>
             </div>
           )}
 
-          <div className="filter-section">
-            <div className="search-input-wrapper">
-              <span className="search-icon">
+          <div className="guest-filter-section">
+            <div className="guest-search-input-wrapper">
+              <span className="guest-search-icon">
                 <SearchIcon fontSize="small" />
               </span>
               <input
                 type="text"
-                placeholder="Tìm theo tên, email..."
-                className="search-input"
+                placeholder="Tìm theo tên hoặc số điện thoại..."
+                className="guest-search-input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            <div className="phone-search-wrapper">
-              <span className="phone-icon">
-                <PhoneIcon fontSize="small" />
-              </span>
-              <input
-                type="text"
-                placeholder="Số điện thoại..."
-                className="phone-input"
-                value={phoneSearch}
-                onChange={(e) => setPhoneSearch(e.target.value)}
-              />
-              <button onClick={searchByPhone} className="search-button" disabled={loading}>
-                Tìm
-              </button>
-            </div>
-          </div>
-
-          <div className="filter-controls">
-            <select className="status-select" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
+            <select className="guest-status-select" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
               <option value="all">Tất cả trạng thái</option>
               <option value="PENDING">Chờ xác nhận</option>
               <option value="CONFIRMED">Đã xác nhận</option>
@@ -314,35 +273,31 @@ const GuestBookingManagement = () => {
 
             <input
               type="date"
-              className="date-input"
+              className="guest-date-input"
               value={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
             />
             <input
               type="date"
-              className="date-input"
+              className="guest-date-input"
               value={dateRange.end}
               onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
             />
             {dateRange.start && dateRange.end && (
-              <button onClick={fetchByDateRange} className="filter-date-button">
+              <button onClick={fetchByDateRange} className="guest-filter-date-button">
                 Lọc theo ngày
               </button>
             )}
-
-            <button onClick={clearFilters} className="clear-filter-button">
-              Xóa bộ lọc
-            </button>
 
             <button
               onClick={() => {
                 fetchBookings();
                 fetchStatistics();
               }}
-              className="refresh-button"
+              className="guest-refresh-button"
               disabled={loading}
             >
-              <span className={`refresh-icon ${loading ? 'spinning' : ''}`}>
+              <span className={`guest-refresh-icon ${loading ? 'spinning' : ''}`}>
                 <RefreshIcon fontSize="small" />
               </span>
               Làm mới
@@ -351,15 +306,15 @@ const GuestBookingManagement = () => {
         </div>
 
         {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p className="loading-text">Đang tải dữ liệu...</p>
+          <div className="guest-loading-container">
+            <div className="guest-loading-spinner"></div>
+            <p className="guest-loading-text">Đang tải dữ liệu...</p>
           </div>
         ) : (
-          <div className="table-container">
-            <div className="table-wrapper">
-              <table className="bookings-table">
-                <thead className="table-header">
+          <div className="guest-table-container">
+            <div className="guest-table-wrapper">
+              <table className="guest-bookings-table">
+                <thead className="guest-table-header">
                   <tr>
                     <th>ID</th>
                     <th>Tên khách</th>
@@ -370,21 +325,21 @@ const GuestBookingManagement = () => {
                     <th>Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="table-body">
+                <tbody className="guest-table-body">
                   {filteredBookings.map((booking) => (
                     <tr key={booking.id}>
-                      <td className="cell-id">#{booking.id}</td>
-                      <td className="cell-name">{booking.fullname || '-'}</td>
-                      <td className="cell-contact">
+                      <td className="guest-cell-id">#{booking.id}</td>
+                      <td className="guest-cell-name">{booking.fullname || '-'}</td>
+                      <td className="guest-cell-contact">
                         <div>{booking.phoneNumber || '-'}</div>
-                        {booking.email && <div className="cell-contact-email">{booking.email}</div>}
+                        {booking.email && <div className="guest-cell-contact-email">{booking.email}</div>}
                       </td>
-                      <td className="cell-datetime">{formatDateTime(booking.startedAt)}</td>
-                      <td className="cell-guests">{booking.memberInt || '-'} người</td>
+                      <td className="guest-cell-datetime">{formatDateTime(booking.startedAt)}</td>
+                      <td className="guest-cell-guests">{booking.memberInt || '-'} người</td>
                       <td>{getStatusBadge(booking.status)}</td>
                       <td>
-                        <div className="action-buttons">
-                          <button onClick={() => openModal(booking, 'view')} className="action-button view" title="Chi tiết">
+                        <div className="guest-action-buttons">
+                          <button onClick={() => openModal(booking, 'view')} className="guest-action-button view" title="Chi tiết">
                             <VisibilityIcon />
                           </button>
 
@@ -392,7 +347,7 @@ const GuestBookingManagement = () => {
                             <>
                               <button
                                 onClick={() => openModal(booking, 'confirm')}
-                                className="action-button confirm"
+                                className="guest-action-button confirm"
                                 title="Xác nhận"
                                 disabled={actionLoading}
                               >
@@ -400,7 +355,7 @@ const GuestBookingManagement = () => {
                               </button>
                               <button
                                 onClick={() => openModal(booking, 'deny')}
-                                className="action-button deny"
+                                className="guest-action-button deny"
                                 title="Từ chối"
                                 disabled={actionLoading}
                               >
@@ -412,7 +367,7 @@ const GuestBookingManagement = () => {
                           {booking.status === 'CONFIRMED' && (
                             <button
                               onClick={() => handleComplete(booking)}
-                              className="action-button complete"
+                              className="guest-action-button complete"
                               title="Hoàn thành"
                               disabled={actionLoading}
                             >
@@ -428,9 +383,9 @@ const GuestBookingManagement = () => {
             </div>
 
             {filteredBookings.length === 0 && !loading && (
-              <div className="empty-state">
-                <div className="empty-icon">
-                  <EventIcon fontSize="large" />
+              <div className="guest-empty-state">
+                <div className="guest-empty-icon">
+                  <EventIcon />
                 </div>
                 <p>Không có đơn đặt bàn nào</p>
               </div>
@@ -439,58 +394,58 @@ const GuestBookingManagement = () => {
         )}
 
         {showModal && selectedBooking && (
-          <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && closeModal()}>
-            <div className="modal-content">
-              <h3 className="modal-title">
+          <div className="guest-modal-overlay" onClick={(e) => e.target.className === 'guest-modal-overlay' && closeModal()}>
+            <div className="guest-modal-content">
+              <h3 className="guest-modal-title">
                 {modalAction === 'confirm' && 'Xác nhận đơn đặt bàn'}
                 {modalAction === 'deny' && 'Từ chối đơn đặt bàn'}
                 {modalAction === 'view' && `Chi tiết đơn đặt bàn #${selectedBooking.id}`}
               </h3>
 
-              <div className="modal-details">
-                <div className="detail-row">
-                  <p className="detail-label">Tên khách:</p>
-                  <p className="detail-value">{selectedBooking.fullname || '-'}</p>
+              <div className="guest-modal-details">
+                <div className="guest-detail-row">
+                  <p className="guest-detail-label">Tên khách:</p>
+                  <p className="guest-detail-value">{selectedBooking.fullname || '-'}</p>
                 </div>
-                <div className="detail-row">
-                  <p className="detail-label">SĐT:</p>
-                  <p className="detail-value">{selectedBooking.phoneNumber || '-'}</p>
+                <div className="guest-detail-row">
+                  <p className="guest-detail-label">SĐT:</p>
+                  <p className="guest-detail-value">{selectedBooking.phoneNumber || '-'}</p>
                 </div>
                 {selectedBooking.email && (
-                  <div className="detail-row">
-                    <p className="detail-label">Email:</p>
-                    <p className="detail-value small">{selectedBooking.email}</p>
+                  <div className="guest-detail-row">
+                    <p className="guest-detail-label">Email:</p>
+                    <p className="guest-detail-value small">{selectedBooking.email}</p>
                   </div>
                 )}
-                <div className="detail-row">
-                  <p className="detail-label">Ngày giờ:</p>
-                  <p className="detail-value">{formatDateTime(selectedBooking.startedAt)}</p>
+                <div className="guest-detail-row">
+                  <p className="guest-detail-label">Ngày giờ:</p>
+                  <p className="guest-detail-value">{formatDateTime(selectedBooking.startedAt)}</p>
                 </div>
-                <div className="detail-row">
-                  <p className="detail-label">Số khách:</p>
-                  <p className="detail-value">{selectedBooking.memberInt || '-'} người</p>
+                <div className="guest-detail-row">
+                  <p className="guest-detail-label">Số khách:</p>
+                  <p className="guest-detail-value">{selectedBooking.memberInt || '-'} người</p>
                 </div>
-                <div className="detail-row">
-                  <p className="detail-label">Trạng thái:</p>
+                <div className="guest-detail-row">
+                  <p className="guest-detail-label">Trạng thái:</p>
                   <div>{getStatusBadge(selectedBooking.status)}</div>
                 </div>
                 {selectedBooking.note && (
-                  <div className="detail-note">
-                    <p className="detail-note-label">Ghi chú:</p>
-                    <p className="detail-note-value">{selectedBooking.note}</p>
+                  <div className="guest-detail-note">
+                    <p className="guest-detail-note-label">Ghi chú:</p>
+                    <p className="guest-detail-note-value">{selectedBooking.note}</p>
                   </div>
                 )}
               </div>
 
               {(modalAction === 'confirm' || modalAction === 'deny') && (
-                <div className="modal-input-section">
-                  <label className="modal-input-label">
+                <div className="guest-modal-input-section">
+                  <label className="guest-modal-input-label">
                     {modalAction === 'deny' ? 'Lý do từ chối' : 'Ghi chú của quản lý'}
-                    {modalAction === 'deny' && <span className="required-mark"> *</span>}
+                    {modalAction === 'deny' && <span className="guest-required-mark"> *</span>}
                   </label>
                   <textarea
                     placeholder={modalAction === 'deny' ? 'Nhập lý do từ chối (bắt buộc)...' : 'Ghi chú thêm (tùy chọn)...'}
-                    className="modal-textarea"
+                    className="guest-modal-textarea"
                     rows="4"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
@@ -498,19 +453,19 @@ const GuestBookingManagement = () => {
                 </div>
               )}
 
-              <div className="modal-buttons">
-                <button onClick={closeModal} className="modal-button close" disabled={actionLoading}>
+              <div className="guest-modal-buttons">
+                <button onClick={closeModal} className="guest-modal-button close" disabled={actionLoading}>
                   {modalAction === 'view' ? 'Đóng' : 'Hủy'}
                 </button>
 
                 {modalAction === 'confirm' && (
-                  <button onClick={handleConfirm} className="modal-button confirm" disabled={actionLoading}>
+                  <button onClick={handleConfirm} className="guest-modal-button confirm" disabled={actionLoading}>
                     {actionLoading ? 'Đang xử lý...' : 'Xác nhận'}
                   </button>
                 )}
 
                 {modalAction === 'deny' && (
-                  <button onClick={handleDeny} className="modal-button deny" disabled={actionLoading || !note.trim()}>
+                  <button onClick={handleDeny} className="guest-modal-button deny" disabled={actionLoading || !note.trim()}>
                     {actionLoading ? 'Đang xử lý...' : 'Từ chối'}
                   </button>
                 )}
