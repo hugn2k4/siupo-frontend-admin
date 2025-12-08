@@ -211,9 +211,14 @@ const NotificationManagement = () => {
         <div className="filter-card">
           <div className="filter-grid">
             <div className="search-wrapper">
-              <div className="search-input-wrapper">
-                <Search className="search-icon" />
-                <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="search-input" />
+              <div className="notification-search-wrapper">
+                <Search className="notification-search-icon" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="notification-search-input"
+                />
               </div>
             </div>
           </div>
@@ -371,13 +376,13 @@ const NotificationManagement = () => {
                   <div className="user-list-container">
                     {/* Search users */}
                     <div className="user-search-wrapper">
-                      <Search className="search-icon-small" />
+                      <Search className="notification-search-icon-small" />
                       <input
                         type="text"
                         placeholder="Tìm kiếm người dùng..."
                         value={userSearchTerm}
                         onChange={(e) => setUserSearchTerm(e.target.value)}
-                        className="user-search-input"
+                        className="user-notification-search-input"
                         disabled={loading}
                       />
                     </div>
