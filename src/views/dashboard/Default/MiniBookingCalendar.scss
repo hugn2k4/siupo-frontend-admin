@@ -1,0 +1,27 @@
+.mini-booking-calendar {
+  .MuiPickersDay-root {
+    position: relative;
+  }
+
+  .booking-indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+
+  .booking-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .booking-count {
+    font-size: 0.65rem;
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 500;
+  }
+}

@@ -1,5 +1,16 @@
 // assets
-import { IconCategory2, IconKey, IconMenu, IconSettings, IconShoppingCart, IconTable, IconUser, IconPackage } from '@tabler/icons-react';
+import {
+  IconBell,
+  IconCategory2,
+  IconKey,
+  IconMenu,
+  IconPhoto,
+  IconSettings,
+  IconShoppingCart,
+  IconTable,
+  IconUser,
+  IconPackage
+} from '@tabler/icons-react';
 
 // constant
 const icons = {
@@ -10,7 +21,9 @@ const icons = {
   IconTable,
   IconShoppingCart,
   IconSettings,
-  IconPackage
+  IconPackage,
+  IconPhoto,
+  IconBell
 };
 
 // ==============================|| EXTRA PAGES MENU ITEMS ||============================== //
@@ -74,7 +87,7 @@ const pages = {
       id: 'banner',
       title: 'Banner Management',
       type: 'collapse',
-      icon: icons.IconTable,
+      icon: icons.IconPhoto,
       children: [
         {
           id: 'banner-management',
@@ -88,7 +101,7 @@ const pages = {
       id: 'notifications',
       title: 'Notification Management',
       type: 'collapse',
-      icon: icons.IconTable,
+      icon: icons.IconBell,
       children: [
         {
           id: 'notification-management',

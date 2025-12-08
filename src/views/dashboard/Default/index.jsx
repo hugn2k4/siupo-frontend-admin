@@ -10,6 +10,7 @@ import TotalOrderLineChartCard from './TotalOrderLineChartCard';
 import TotalIncomeDarkCard from '../../../ui-component/cards/TotalIncomeDarkCard';
 import TotalIncomeLightCard from '../../../ui-component/cards/TotalIncomeLightCard';
 import TotalGrowthBarChart from './TotalGrowthBarChart';
+import MiniBookingCalendar from './MiniBookingCalendar';
 
 import { gridSpacing } from 'store/constant';
 
@@ -61,6 +62,13 @@ export default function Dashboard() {
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <PopularCard isLoading={isLoading} />
+          </Grid>
+        </Grid>
+      </Grid>
+      <Grid size={12}>
+        <Grid container spacing={gridSpacing}>
+          <Grid size={{ xs: 12, md: 6, lg: 7 }}>
+            <MiniBookingCalendar isLoading={isLoading} />
           </Grid>
         </Grid>
       </Grid>
