@@ -89,12 +89,8 @@ const GuestBookingManagement = () => {
         (b) =>
           b.fullname?.toLowerCase().includes(searchLower) ||
           b.email?.toLowerCase().includes(searchLower) ||
-          b.phoneNumber?.includes(searchTerm) // Thêm dòng này để tìm cả SĐT
+          b.phoneNumber?.includes(searchTerm)
       );
-    }
-
-    if (phoneSearch) {
-      filtered = filtered.filter((b) => b.phoneNumber?.includes(phoneSearch));
     }
 
     setFilteredBookings(filtered);
