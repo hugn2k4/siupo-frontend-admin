@@ -40,11 +40,11 @@ const VoucherTable = ({ vouchers, loading, onEdit, onDelete, onToggleStatus }) =
   const getVoucherTypeLabel = (type) => {
     switch (type) {
       case 'PERCENTAGE':
-        return 'Giảm %';
+        return 'Percentage';
       case 'FIXED_AMOUNT':
-        return 'Giảm tiền';
+        return 'Fixed Amount';
       case 'FREE_SHIPPING':
-        return 'Miễn phí ship';
+        return 'Free Shipping';
       default:
         return type;
     }
@@ -52,16 +52,16 @@ const VoucherTable = ({ vouchers, loading, onEdit, onDelete, onToggleStatus }) =
 
   const getStatusChip = (status) => {
     const statusMap = {
-      ACTIVE: { label: 'Hoạt động', color: 'success' },
-      INACTIVE: { label: 'Tạm dừng', color: 'error' },
-      EXPIRED: { label: 'Hết hạn', color: 'default' }
+      ACTIVE: { label: 'Active', color: 'success' },
+      INACTIVE: { label: 'Inactive', color: 'error' },
+      EXPIRED: { label: 'Expired', color: 'default' }
     };
     const { label, color } = statusMap[status] || statusMap.INACTIVE;
     return <Chip label={label} color={color} size="small" />;
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   };
 
   return (
@@ -69,27 +69,27 @@ const VoucherTable = ({ vouchers, loading, onEdit, onDelete, onToggleStatus }) =
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Mã</TableCell>
-            <TableCell>Tên</TableCell>
-            <TableCell>Loại</TableCell>
-            <TableCell>Giá trị</TableCell>
-            <TableCell>Đã dùng</TableCell>
-            <TableCell>Thời gian</TableCell>
-            <TableCell>Trạng thái</TableCell>
-            <TableCell align="center">Thao tác</TableCell>
+            <TableCell>Code</TableCell>
+            <TableCell>Name</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell>Value</TableCell>
+            <TableCell>Used</TableCell>
+            <TableCell>Duration</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell align="center">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {loading ? (
             <TableRow>
               <TableCell colSpan={8} align="center">
-                Đang tải...
+                Loading...
               </TableCell>
             </TableRow>
           ) : vouchers.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} align="center">
-                Chưa có voucher nào
+                No vouchers available
               </TableCell>
             </TableRow>
           ) : (
@@ -153,7 +153,7 @@ const VoucherTable = ({ vouchers, loading, onEdit, onDelete, onToggleStatus }) =
                 <TableCell align="center">
                   <Stack direction="row" spacing={1} justifyContent="center">
                     {voucher.status !== 'EXPIRED' && (
-                      <Tooltip title={voucher.status === 'ACTIVE' ? 'Tạm dừng' : 'Kích hoạt'}>
+                      <Tooltip title={voucher.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}>
                         <IconButton
                           size="small"
                           color={voucher.status === 'ACTIVE' ? 'error' : 'success'}
@@ -163,12 +163,12 @@ const VoucherTable = ({ vouchers, loading, onEdit, onDelete, onToggleStatus }) =
                         </IconButton>
                       </Tooltip>
                     )}
-                    <Tooltip title="Chỉnh sửa">
+                    <Tooltip title="Edit">
                       <IconButton size="small" color="primary" onClick={() => onEdit(voucher)}>
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Xóa">
+                    <Tooltip title="Delete">
                       <IconButton size="small" color="error" onClick={() => onDelete(voucher.id)}>
                         <DeleteIcon />
                       </IconButton>

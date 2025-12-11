@@ -58,7 +58,7 @@ const VoucherManagement = () => {
       }));
     } catch (error) {
       console.error('Error fetching vouchers:', error);
-      showNotification('Lỗi khi tải danh sách voucher', 'error');
+      showNotification('Error loading voucher list', 'error');
     } finally {
       setLoading(false);
     }
@@ -109,14 +109,14 @@ const VoucherManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa voucher này?')) {
+    if (window.confirm('Are you sure you want to delete this voucher?')) {
       try {
         await voucherApi.delete(id);
-        showNotification('Xóa voucher thành công', 'success');
+        showNotification('Voucher deleted successfully', 'success');
         fetchVouchers();
       } catch (error) {
         console.error('Error deleting voucher:', error);
-        showNotification('Lỗi khi xóa voucher', 'error');
+        showNotification('Error deleting voucher', 'error');
       }
     }
   };
@@ -124,11 +124,11 @@ const VoucherManagement = () => {
   const handleToggleStatus = async (id) => {
     try {
       await voucherApi.toggleStatus(id);
-      showNotification('Cập nhật trạng thái thành công', 'success');
+      showNotification('Status updated successfully', 'success');
       fetchVouchers();
     } catch (error) {
       console.error('Error toggling status:', error);
-      showNotification('Lỗi khi cập nhật trạng thái', 'error');
+      showNotification('Error updating status', 'error');
     }
   };
 
@@ -154,16 +154,16 @@ const VoucherManagement = () => {
     try {
       if (currentVoucher) {
         await voucherApi.update(currentVoucher.id, payload);
-        showNotification('Cập nhật voucher thành công', 'success');
+        showNotification('Voucher updated successfully', 'success');
       } else {
         await voucherApi.create(payload);
-        showNotification('Thêm voucher thành công', 'success');
+        showNotification('Voucher created successfully', 'success');
       }
       setIsModalOpen(false);
       fetchVouchers();
     } catch (error) {
       console.error('Error saving voucher:', error);
-      showNotification(error.response?.data?.message || 'Lỗi khi lưu voucher', 'error');
+      showNotification(error.response?.data?.message || 'Error saving voucher', 'error');
     }
   };
 
@@ -189,14 +189,14 @@ const VoucherManagement = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-            Quản Lý Voucher
+            Voucher Management
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Quản lý mã giảm giá và khuyến mãi
+            Manage discount codes and promotions
           </Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
-          Thêm Voucher Mới
+          Add New Voucher
         </Button>
       </Box>
 
@@ -206,7 +206,7 @@ const VoucherManagement = () => {
           <Card>
             <CardContent>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Tổng Voucher
+                Total Vouchers
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: 700 }}>
                 {pagination.totalElements}
@@ -218,7 +218,7 @@ const VoucherManagement = () => {
           <Card>
             <CardContent>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Đang Hoạt Động
+                Active
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
                 {vouchers.filter((v) => v.status === 'ACTIVE').length}
@@ -230,7 +230,7 @@ const VoucherManagement = () => {
           <Card>
             <CardContent>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Tạm Dừng
+                Inactive
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: 700, color: 'error.main' }}>
                 {vouchers.filter((v) => v.status === 'INACTIVE').length}
@@ -241,7 +241,15 @@ const VoucherManagement = () => {
       </Grid>
 
       {/* Table */}
-      <VoucherTable vouchers={vouchers} loading={loading} onEdit={handleEdit} onDelete={handleDelete} onToggleStatus={handleToggleStatus} />
+      <Card>
+        <VoucherTable
+          vouchers={vouchers}
+          loading={loading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onToggleStatus={handleToggleStatus}
+        />
+      </Card>
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (

@@ -52,6 +52,20 @@ const pages = {
       ]
     },
     {
+      id: 'categories',
+      title: 'Categories',
+      type: 'collapse',
+      icon: icons.IconCategory2,
+      children: [
+        {
+          id: 'category-list',
+          title: 'List Category',
+          type: 'item',
+          url: '/categories/list-category'
+        }
+      ]
+    },
+    {
       id: 'combos',
       title: 'Combo',
       type: 'collapse',
@@ -110,20 +124,6 @@ const pages = {
           title: 'Notification Management',
           type: 'item',
           url: '/notificationsmanage/notification-management'
-        }
-      ]
-    },
-    {
-      id: 'categories',
-      title: 'Categories',
-      type: 'collapse',
-      icon: icons.IconCategory2,
-      children: [
-        {
-          id: 'category-list',
-          title: 'List Category',
-          type: 'item',
-          url: '/categories/list-category'
         }
       ]
     },

@@ -1,3 +1,4 @@
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
@@ -220,8 +221,8 @@ export default function ListCombo() {
             }}
           />
 
-          <Button size="large" variant="outlined" color="secondary" onClick={handleAdd}>
-            Add
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
+            Add Combo
           </Button>
         </Box>
       }

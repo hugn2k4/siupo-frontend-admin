@@ -35,7 +35,6 @@ import {
 import { useSnackbar } from 'contexts/SnackbarProvider';
 import React from 'react';
 import orderService from 'services/orderService';
-import MainCard from 'ui-component/cards/MainCard';
 import DeleteConfirmDialog from '../menu/component/DeleteConfirmDialog';
 import OrderDetailDialog from './component/OrderDetailDialog';
 import OrderStatusDialog from './component/OrderStatusDialog';
@@ -219,220 +218,229 @@ export default function OrderList() {
   }, [orders, totalElements]);
 
   return (
-    <Box>
+    <Box sx={{ p: 3 }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
+            Order Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage and track customer orders
+          </Typography>
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Tooltip title="Refresh">
+            <IconButton onClick={handleRefresh} size="small" color="primary">
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Filters">
+            <IconButton onClick={() => setFilterExpanded(!filterExpanded)} size="small" color="primary">
+              <FilterListIcon />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      </Box>
+
       {/* Statistics Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {stats.map((stat, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
             <Card>
               <CardContent>
-                <Stack spacing={1}>
-                  <Typography variant="body2" color="text.secondary">
-                    {stat.label}
-                  </Typography>
-                  <Typography variant="h3" color={`${stat.color}.main`}>
-                    {stat.value}
-                  </Typography>
-                </Stack>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  {stat.label}
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 700 }} color={`${stat.color}.main`}>
+                  {stat.value}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
 
-      <MainCard
-        title="Order Management"
-        secondary={
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="Refresh">
-              <IconButton onClick={handleRefresh} size="small" color="primary">
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Filters">
-              <IconButton onClick={() => setFilterExpanded(!filterExpanded)} size="small" color="primary">
-                <FilterListIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        }
-      >
-        {/* Search and Filters */}
-        <Box sx={{ mb: 2 }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-            <TextField
-              placeholder="Search by order ID, customer..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              size="small"
-              sx={{ flexGrow: 1 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                )
-              }}
-            />
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel id="status-filter-label">Status</InputLabel>
-              <Select labelId="status-filter-label" value={statusFilter} label="Status" onChange={handleStatusFilterChange}>
-                <MenuItem value="">All</MenuItem>
-                {Object.keys(ORDER_STATUS_MAP).map((status) => (
-                  <MenuItem key={status} value={status}>
-                    <Chip
-                      label={ORDER_STATUS_MAP[status].label}
-                      color={ORDER_STATUS_MAP[status].color}
-                      size="small"
-                      sx={{ minWidth: 100 }}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-
-          {(statusFilter || searchQuery) && (
-            <Box>
-              <Button size="small" onClick={handleClearFilters} startIcon={<FilterListIcon />}>
-                Clear Filters
-              </Button>
-            </Box>
-          )}
-        </Box>
-
-        {/* Orders Table */}
-        <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>Order ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Payment</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Time</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                    <CircularProgress size={40} />
-                  </TableCell>
-                </TableRow>
-              ) : orders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      No orders found
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                orders.map((order) => (
-                  <TableRow key={order.orderId} hover sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={600} color="primary">
-                        #{order.orderId}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light' }}>{order.userName?.charAt(0) || 'U'}</Avatar>
-                        <Box>
-                          <Typography variant="body2" fontWeight={500}>
-                            {order.userName || 'Guest'}
-                          </Typography>
-                          {order.userEmail && (
-                            <Typography variant="caption" color="text.secondary">
-                              {order.userEmail}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={600}>
-                        {formatCurrency(order.totalPrice)}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Ship: {formatCurrency(order.shippingFee)} | VAT: {formatCurrency(order.vat)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={order.paymentMethod || 'N/A'} size="small" variant="outlined" sx={{ borderRadius: 1 }} />
-                    </TableCell>
-                    <TableCell>
+      {/* Table Card */}
+      <Card>
+        <CardContent>
+          {/* Search and Filters */}
+          <Box sx={{ mb: 2 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+              <TextField
+                placeholder="Search by order ID, customer..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                size="small"
+                sx={{ flexGrow: 1 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  )
+                }}
+              />
+              <FormControl size="small" sx={{ minWidth: 200 }}>
+                <InputLabel id="status-filter-label">Status</InputLabel>
+                <Select labelId="status-filter-label" value={statusFilter} label="Status" onChange={handleStatusFilterChange}>
+                  <MenuItem value="">All</MenuItem>
+                  {Object.keys(ORDER_STATUS_MAP).map((status) => (
+                    <MenuItem key={status} value={status}>
                       <Chip
-                        label={getStatusLabel(order.status)}
-                        color={getStatusColor(order.status)}
+                        label={ORDER_STATUS_MAP[status].label}
+                        color={ORDER_STATUS_MAP[status].color}
                         size="small"
-                        sx={{ minWidth: 100, fontWeight: 500 }}
+                        sx={{ minWidth: 100 }}
                       />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{formatDate(order.createdAt)}</Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Stack direction="row" spacing={0.5} justifyContent="center">
-                        <Tooltip title="View Details">
-                          <IconButton
-                            size="small"
-                            color="info"
-                            onClick={() => handleViewDetail(order.orderId)}
-                            sx={{ '&:hover': { bgcolor: 'info.lighter' } }}
-                          >
-                            <VisibilityIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        {order.status !== 'COMPLETED' && order.status !== 'CANCELED' && (
-                          <Tooltip title="Update Status">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleEditStatus(order)}
-                              sx={{ '&:hover': { bgcolor: 'primary.lighter' } }}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        {order.status === 'CANCELED' && (
-                          <Tooltip title="Delete Order">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDelete(order.orderId)}
-                              sx={{ '&:hover': { bgcolor: 'error.lighter' } }}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Stack>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+
+            {(statusFilter || searchQuery) && (
+              <Box>
+                <Button size="small" onClick={handleClearFilters} startIcon={<FilterListIcon />}>
+                  Clear Filters
+                </Button>
+              </Box>
+            )}
+          </Box>
+
+          {/* Orders Table */}
+          <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'none' }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>Order ID</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Payment</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Time</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                      <CircularProgress size={40} />
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            component="div"
-            count={totalElements}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="Rows per page:"
-            labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`}
-          />
-        </TableContainer>
-      </MainCard>
+                ) : orders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        No orders found
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  orders.map((order) => (
+                    <TableRow key={order.orderId} hover sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={600} color="primary">
+                          #{order.orderId}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light' }}>{order.userName?.charAt(0) || 'U'}</Avatar>
+                          <Box>
+                            <Typography variant="body2" fontWeight={500}>
+                              {order.userName || 'Guest'}
+                            </Typography>
+                            {order.userEmail && (
+                              <Typography variant="caption" color="text.secondary">
+                                {order.userEmail}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={600}>
+                          {formatCurrency(order.totalPrice)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Ship: {formatCurrency(order.shippingFee)} | VAT: {formatCurrency(order.vat)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={order.paymentMethod || 'N/A'} size="small" variant="outlined" sx={{ borderRadius: 1 }} />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getStatusLabel(order.status)}
+                          color={getStatusColor(order.status)}
+                          size="small"
+                          sx={{ minWidth: 100, fontWeight: 500 }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{formatDate(order.createdAt)}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Stack direction="row" spacing={0.5} justifyContent="center">
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              color="info"
+                              onClick={() => handleViewDetail(order.orderId)}
+                              sx={{ '&:hover': { bgcolor: 'info.lighter' } }}
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          {order.status !== 'COMPLETED' && order.status !== 'CANCELED' && (
+                            <Tooltip title="Update Status">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => handleEditStatus(order)}
+                                sx={{ '&:hover': { bgcolor: 'primary.lighter' } }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {order.status === 'CANCELED' && (
+                            <Tooltip title="Delete Order">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDelete(order.orderId)}
+                                sx={{ '&:hover': { bgcolor: 'error.lighter' } }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25, 50]}
+              component="div"
+              count={totalElements}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              labelRowsPerPage="Rows per page:"
+              labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`}
+            />
+          </TableContainer>
+        </CardContent>
+      </Card>
 
       {/* Dialogs */}
       {detailOpen && <OrderDetailDialog open={detailOpen} orderId={selectedOrderId} onClose={() => setDetailOpen(false)} />}
