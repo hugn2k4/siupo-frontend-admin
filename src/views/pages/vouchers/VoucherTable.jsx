@@ -156,10 +156,10 @@ const VoucherTable = ({ vouchers, loading, onEdit, onDelete, onToggleStatus }) =
                       <Tooltip title={voucher.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}>
                         <IconButton
                           size="small"
-                          color={voucher.status === 'ACTIVE' ? 'error' : 'success'}
+                          color={voucher.status === 'ACTIVE' ? 'success' : 'error'}
                           onClick={() => onToggleStatus(voucher.id)}
                         >
-                          {voucher.status === 'ACTIVE' ? <ToggleOffIcon /> : <ToggleOnIcon />}
+                          {voucher.status === 'ACTIVE' ? <ToggleOnIcon /> : <ToggleOffIcon />}
                         </IconButton>
                       </Tooltip>
                     )}

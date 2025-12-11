@@ -50,11 +50,12 @@ const VoucherManagement = () => {
         sortBy: 'id',
         sortDir: 'desc'
       });
-      setVouchers(response.data.content || []);
+      const pageData = response.data.data; // ApiResponse wraps Page in data field
+      setVouchers(pageData.content || []);
       setPagination((prev) => ({
         ...prev,
-        totalPages: response.data.totalPages || 0,
-        totalElements: response.data.totalElements || 0
+        totalPages: pageData.totalPages || 0,
+        totalElements: pageData.totalElements || 0
       }));
     } catch (error) {
       console.error('Error fetching vouchers:', error);
