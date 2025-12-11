@@ -36,6 +36,9 @@ const UserList = Loadable(lazy(() => import('views/pages/users/UserList')));
 
 // orders routing
 const OrderList = Loadable(lazy(() => import('views/pages/orders/OrderList')));
+
+// vouchers routing
+const VoucherManagement = Loadable(lazy(() => import('views/pages/vouchers/VoucherManagement')));
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -157,6 +160,15 @@ const MainRoutes = {
         {
           path: 'list',
           element: <OrderList />
+        }
+      ]
+    },
+    {
+      path: 'vouchers',
+      children: [
+        {
+          path: 'management',
+          element: <VoucherManagement />
         }
       ]
     }

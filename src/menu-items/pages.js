@@ -4,12 +4,13 @@ import {
   IconCategory2,
   IconKey,
   IconMenu,
+  IconPackage,
   IconPhoto,
   IconSettings,
   IconShoppingCart,
   IconTable,
-  IconUser,
-  IconPackage
+  IconTicket,
+  IconUser
 } from '@tabler/icons-react';
 
 // constant
@@ -23,7 +24,8 @@ const icons = {
   IconSettings,
   IconPackage,
   IconPhoto,
-  IconBell
+  IconBell,
+  IconTicket
 };
 
 // ==============================|| EXTRA PAGES MENU ITEMS ||============================== //
@@ -141,6 +143,20 @@ const pages = {
       type: 'collapse',
       icon: icons.IconShoppingCart,
       children: [{ id: 'order-list', title: 'Order List', type: 'item', url: '/orders/list' }]
+    },
+    {
+      id: 'vouchers',
+      title: 'Vouchers',
+      type: 'collapse',
+      icon: icons.IconTicket,
+      children: [
+        {
+          id: 'voucher-management',
+          title: 'Voucher Management',
+          type: 'item',
+          url: '/vouchers/management'
+        }
+      ]
     },
     {
       id: 'account-settings',
