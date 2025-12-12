@@ -67,7 +67,7 @@ export default function Dashboard() {
       </Grid>
       <Grid size={12}>
         <Grid container spacing={gridSpacing}>
-          <Grid size={{ xs: 12, md: 6, lg: 7 }}>
+          <Grid size={{ xs: 12, md: 12, lg: 12 }}>
             <MiniBookingCalendar isLoading={isLoading} />
           </Grid>
         </Grid>
