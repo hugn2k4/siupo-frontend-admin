@@ -33,6 +33,7 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import notificationApi from '../../../api/notificationApi';
 import userApi from '../../../api/userApi';
+import { useSnackbar } from '../../../contexts/SnackbarProvider';
 
 const NotificationManagement = () => {
   const [notifications, setNotifications] = useState([]);
@@ -44,6 +45,7 @@ const NotificationManagement = () => {
   const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({ title: '', content: '', userId: null, sendToAll: true });
+  const { showSnackbar } = useSnackbar();
 
   useEffect(() => {
     loadNotifications();
@@ -112,12 +114,15 @@ const NotificationManagement = () => {
         userId: formData.sendToAll ? null : formData.userId
       };
       await notificationApi.createNotification(requestData);
-      alert(formData.sendToAll ? 'Đã gửi thông báo đến tất cả người dùng' : 'Đã tạo thông báo thành công');
+      showSnackbar({
+        message: formData.sendToAll ? 'Đã gửi thông báo đến tất cả người dùng' : 'Đã tạo thông báo thành công',
+        severity: 'success'
+      });
       handleCloseDialog();
       loadNotifications();
     } catch (err) {
       console.error('Error creating notification:', err);
-      alert(err.response?.data?.message || 'Không thể tạo thông báo. Vui lòng thử lại!');
+      showSnackbar({ message: err.response?.data?.message || 'Không thể tạo thông báo. Vui lòng thử lại!', severity: 'error' });
     } finally {
       setLoading(false);
     }

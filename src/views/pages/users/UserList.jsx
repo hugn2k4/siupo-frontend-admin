@@ -29,6 +29,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import MainCard from '../../../ui-component/cards/MainCard.jsx';
 import { useState, useEffect } from 'react';
 import userApi from '../../../api/userApi';
+import { useSnackbar } from '../../../contexts/SnackbarProvider';
 
 // Components
 import DeleteConfirmDialog from './component/DeleteConfirmDialog';
@@ -50,6 +51,8 @@ export default function UserList() {
   const [deleteName, setDeleteName] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
 
+  const { showSnackbar } = useSnackbar();
+
   // ==== Load customers from API ====
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -60,13 +63,13 @@ export default function UserList() {
         setUsers(activeUsers);
       } catch (error) {
         console.error('Failed to load customers:', error);
-        alert('Could not load customer list');
+        showSnackbar({ message: 'Could not load customer list', severity: 'error' });
       } finally {
         setLoading(false);
       }
     };
     fetchCustomers();
-  }, []);
+  }, [showSnackbar]);
 
   // ==== Search by name, email, or phone number ====
   const filteredUsers = users
@@ -102,7 +105,7 @@ export default function UserList() {
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u)));
       setOpenEdit(false);
     } catch {
-      alert('Failed to update status');
+      showSnackbar({ message: 'Failed to update status', severity: 'error' });
     } finally {
       setUpdatingId(null);
     }
@@ -121,7 +124,7 @@ export default function UserList() {
       await userApi.updateCustomerStatus(id, 'DELETED');
       setUsers((prev) => prev.filter((u) => u.id !== id));
     } catch {
-      alert('Failed to delete customer');
+      showSnackbar({ message: 'Failed to delete customer', severity: 'error' });
     } finally {
       setOpenDelete(false);
       setUpdatingId(null);

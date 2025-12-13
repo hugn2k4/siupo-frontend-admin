@@ -23,8 +23,8 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import TablePagination from '@mui/material/TablePagination';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
+import ConfirmDialog from '../../../components/ConfirmDialog';
+import { useSnackbar } from '../../../contexts/SnackbarProvider';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -40,7 +40,7 @@ const CustomerBookingManagement = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -51,6 +51,9 @@ const CustomerBookingManagement = () => {
   const [statistics, setStatistics] = useState({ total: 0, pending: 0, confirmed: 0, completed: 0, denied: 0 });
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { showSnackbar } = useSnackbar();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -87,7 +90,7 @@ const CustomerBookingManagement = () => {
 
   const fetchByDateRange = async () => {
     if (!dateRange.start || !dateRange.end) {
-      alert('Vui lòng chọn cả ngày bắt đầu và kết thúc');
+      showSnackbar({ message: 'Vui lòng chọn cả ngày bắt đầu và kết thúc', severity: 'warning' });
       return;
     }
     setLoading(true);
@@ -143,10 +146,10 @@ const CustomerBookingManagement = () => {
       await fetchBookings();
       await fetchStatistics();
       handleCloseDialog();
-      setSnackbar({ open: true, message: 'Đã xác nhận đơn đặt bàn', severity: 'success' });
+      showSnackbar({ message: 'Đã xác nhận đơn đặt bàn', severity: 'success' });
     } catch (err) {
       console.error('Error confirming booking:', err);
-      setSnackbar({ open: true, message: 'Lỗi khi xác nhận: ' + (err.response?.data?.message || err.message), severity: 'error' });
+      showSnackbar({ message: 'Lỗi khi xác nhận: ' + (err.response?.data?.message || err.message), severity: 'error' });
     } finally {
       setActionLoading(false);
     }
@@ -155,7 +158,7 @@ const CustomerBookingManagement = () => {
   const handleDeny = async () => {
     if (!selectedBooking) return;
     if (!note || note.trim() === '') {
-      alert('Vui lòng nhập lý do từ chối');
+      showSnackbar({ message: 'Vui lòng nhập lý do từ chối', severity: 'warning' });
       return;
     }
     setActionLoading(true);
@@ -164,28 +167,35 @@ const CustomerBookingManagement = () => {
       await fetchBookings();
       await fetchStatistics();
       handleCloseDialog();
-      setSnackbar({ open: true, message: 'Đã từ chối đơn đặt bàn', severity: 'info' });
+      showSnackbar({ message: 'Đã từ chối đơn đặt bàn', severity: 'info' });
     } catch (err) {
       console.error('Error denying booking:', err);
-      setSnackbar({ open: true, message: 'Lỗi khi từ chối: ' + (err.response?.data?.message || err.message), severity: 'error' });
+      showSnackbar({ message: 'Lỗi khi từ chối: ' + (err.response?.data?.message || err.message), severity: 'error' });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleComplete = async (booking) => {
-    if (!window.confirm('Xác nhận hoàn thành đơn đặt bàn này?')) return;
+    setConfirmTarget(booking);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!confirmTarget) return;
     setActionLoading(true);
     try {
-      await managePlaceTable.completeCustomerBooking(booking.id, null);
+      await managePlaceTable.completeCustomerBooking(confirmTarget.id, null);
       await fetchBookings();
       await fetchStatistics();
-      setSnackbar({ open: true, message: 'Đã hoàn thành đơn đặt bàn', severity: 'success' });
+      showSnackbar({ message: 'Đã hoàn thành đơn đặt bàn', severity: 'success' });
     } catch (err) {
       console.error('Error completing booking:', err);
-      setSnackbar({ open: true, message: 'Lỗi khi hoàn thành: ' + (err.response?.data?.message || err.message), severity: 'error' });
+      showSnackbar({ message: 'Lỗi khi hoàn thành: ' + (err.response?.data?.message || err.message), severity: 'error' });
     } finally {
       setActionLoading(false);
+      setConfirmOpen(false);
+      setConfirmTarget(null);
     }
   };
 
@@ -537,11 +547,16 @@ const CustomerBookingManagement = () => {
           )}
         </DialogActions>
       </Dialog>
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Xác nhận hoàn thành"
+        content="Xác nhận hoàn thành đơn đặt bàn này?"
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmComplete}
+        loading={actionLoading}
+        confirmText="Hoàn thành"
+      />
     </MainCard>
   );
 };
