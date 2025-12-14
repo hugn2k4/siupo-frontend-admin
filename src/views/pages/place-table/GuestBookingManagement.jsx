@@ -161,7 +161,7 @@ const GuestBookingManagement = () => {
         (b) =>
           b.fullname?.toLowerCase().includes(searchLower) ||
           b.email?.toLowerCase().includes(searchLower) ||
-          String(b.phoneNumber || '').includes(searchQuery)
+          b.phoneNumber?.includes(searchTerm)
       );
     }
 
