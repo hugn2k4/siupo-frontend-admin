@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Image as ImageIcon, Save, X, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import bannerApi from '../../../api/bannerApi';
 import uploadApi from '../../../api/uploadApi';
+import ConfirmDialog from '../../../components/ConfirmDialog';
 
 const BannerManagement = () => {
   const [banners, setBanners] = useState([]);
@@ -11,6 +12,8 @@ const BannerManagement = () => {
   const [formData, setFormData] = useState({ name: '', url: '', position: '' });
   const [uploading, setUploading] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
 
   useEffect(() => {
     fetchBanners();
@@ -55,15 +58,22 @@ const BannerManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa banner này?')) {
-      try {
-        await bannerApi.delete(id);
-        showNotification('Xóa banner thành công', 'success');
-        fetchBanners();
-      } catch (error) {
-        console.error('Error deleting banner:', error);
-        showNotification('Lỗi khi xóa banner', 'error');
-      }
+    setConfirmTarget(id);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmTarget) return;
+    try {
+      await bannerApi.delete(confirmTarget);
+      showNotification('Xóa banner thành công', 'success');
+      fetchBanners();
+    } catch (error) {
+      console.error('Error deleting banner:', error);
+      showNotification('Lỗi khi xóa banner', 'error');
+    } finally {
+      setConfirmOpen(false);
+      setConfirmTarget(null);
     }
   };
 
@@ -299,6 +309,15 @@ const BannerManagement = () => {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Xác nhận xóa"
+        content="Bạn có chắc chắn muốn xóa banner này?"
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        loading={false}
+        confirmText="Xóa"
+      />
     </div>
   );
 };

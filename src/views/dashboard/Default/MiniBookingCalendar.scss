@@ -1,6 +1,40 @@
 .mini-booking-calendar {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  box-sizing: border-box;
+
+  /* Ensure MUI calendar components stretch to container width */
+  .MuiPaper-root,
+  .MuiCalendarPicker-root,
+  .MuiPickersCalendar-root,
+  .MuiDayPicker-root,
+  .MuiCalendarPicker-viewTransitionContainer,
+  .MuiPickersBasePicker-container {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
   .MuiPickersDay-root {
     position: relative;
+  }
+
+  /* Slide transition wrapper for month switching */
+  .month-slide-wrapper {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .month-slide-track {
+    display: flex;
+    width: 200%;
+    transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  .month-slide-item {
+    width: 50%;
+    box-sizing: border-box;
+    padding-right: 0.5rem;
   }
 
   .booking-indicator {

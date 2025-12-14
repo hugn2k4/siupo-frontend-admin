@@ -2,6 +2,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { Alert, Box, Button, Card, CardContent, Grid, Pagination, Snackbar, Typography } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import voucherApi from '../../../api/voucherApi';
+import ConfirmDialog from '../../../components/ConfirmDialog';
 import VoucherFormDialog from './VoucherFormDialog';
 import VoucherTable from './VoucherTable';
 
@@ -26,6 +27,8 @@ const VoucherManagement = () => {
     isPublic: true
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
   const [pagination, setPagination] = useState({
     page: 0,
     size: 10,
@@ -110,15 +113,22 @@ const VoucherManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this voucher?')) {
-      try {
-        await voucherApi.delete(id);
-        showNotification('Voucher deleted successfully', 'success');
-        fetchVouchers();
-      } catch (error) {
-        console.error('Error deleting voucher:', error);
-        showNotification('Error deleting voucher', 'error');
-      }
+    setConfirmTarget(id);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmTarget) return;
+    try {
+      await voucherApi.delete(confirmTarget);
+      showNotification('Voucher deleted successfully', 'success');
+      fetchVouchers();
+    } catch (error) {
+      console.error('Error deleting voucher:', error);
+      showNotification('Error deleting voucher', 'error');
+    } finally {
+      setConfirmOpen(false);
+      setConfirmTarget(null);
     }
   };
 
@@ -185,6 +195,16 @@ const VoucherManagement = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete Voucher"
+        content="Are you sure you want to delete this voucher?"
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        loading={false}
+        confirmText="Delete"
+      />
 
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>

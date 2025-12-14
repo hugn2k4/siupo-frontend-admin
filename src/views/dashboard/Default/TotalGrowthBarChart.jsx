@@ -314,7 +314,12 @@ export default function TotalGrowthBarChart({ isLoading: propIsLoading }) {
                 dataLabels: { enabled: false },
                 stroke: { show: true, width: 2, colors: ['transparent'] },
                 xaxis: { categories: chartCategories, labels: { style: { fontSize: '12px' } } },
-                yaxis: { title: { text: '' }, labels: { style: { fontSize: '12px' } } },
+                yaxis: {
+                  title: { text: '' },
+                  labels: { show: false },
+                  axisBorder: { show: false },
+                  axisTicks: { show: false }
+                },
                 fill: { opacity: 1 },
                 tooltip: { y: { formatter: (val) => `$${val.toLocaleString()}` } },
                 legend: { show: false },
