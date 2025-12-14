@@ -33,6 +33,8 @@ export default function TotalOrderLineChartCard({ isLoading: propIsLoading }) {
   const [timeValue, setTimeValue] = useState(false); // false = Year, true = Month
   const [totalOrders, setTotalOrders] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [chartMonthConfig, setChartMonthConfig] = useState(() => JSON.parse(JSON.stringify(ChartDataMonth)));
+  const [chartYearConfig, setChartYearConfig] = useState(() => JSON.parse(JSON.stringify(ChartDataYear)));
 
   const handleChangeTime = (event, newValue) => {
     setTimeValue(newValue);
@@ -55,6 +57,79 @@ export default function TotalOrderLineChartCard({ isLoading: propIsLoading }) {
           const filterType = timeValue ? 'month' : 'year';
           const count = countCompletedOrders(orders, filterType);
           setTotalOrders(count);
+
+          // build dynamic series for charts (last 8 days for month, last 8 months for year)
+          // monthSeries = counts for each day in the current month
+          const monthSeries = buildDailySeriesForCurrentMonth(orders);
+          // yearSeries = counts for each month in the current year (12 months)
+          const yearSeries = buildMonthlySeriesForYear(orders);
+
+          // build labels
+          const monthLabels = buildDailyLabelsForCurrentMonth();
+          const yearLabels = buildLast12MonthsLabels();
+
+          const newMonth = JSON.parse(JSON.stringify(ChartDataMonth));
+          newMonth.series = [{ name: 'Total Order', ...newMonth.series[0], data: monthSeries }];
+          newMonth.options = newMonth.options || {};
+          newMonth.options.xaxis = { ...(newMonth.options.xaxis || {}), categories: monthLabels };
+          // tooltip x -> show full date for the day (YYYY-MM-DD)
+          newMonth.options.tooltip = {
+            ...(newMonth.options.tooltip || {}),
+            x: {
+              show: true,
+              formatter: (val) => {
+                // val is the category (day number)
+                return `Ngày: ${val}`;
+              }
+            },
+            y: { title: { formatter: () => '' } }
+          };
+          const monthMax = monthSeries.length ? Math.max(...monthSeries) : 0;
+          const yearMax = yearSeries.length ? Math.max(...yearSeries) : 0;
+          const overallMax = Math.max(monthMax, yearMax);
+          // Use the actual overall max so the largest day/month fills the chart.
+          // If there's no data, fall back to 10 for visibility.
+          const overallScale = overallMax === 0 ? 10 : overallMax;
+          newMonth.options = newMonth.options || {};
+          newMonth.options.yaxis = {
+            ...(newMonth.options.yaxis || {}),
+            min: 0,
+            max: overallScale,
+            labels: { show: false },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+          };
+          newMonth.options.grid = { ...(newMonth.options.grid || {}), show: false };
+          const newYear = JSON.parse(JSON.stringify(ChartDataYear));
+          newYear.series = [{ name: 'Total Order', ...newYear.series[0], data: yearSeries }];
+          newYear.options = newYear.options || {};
+          newYear.options.xaxis = { ...(newYear.options.xaxis || {}), categories: yearLabels };
+          // tooltip x -> show Month Year (e.g., Jan 2025)
+          newYear.options.tooltip = {
+            ...(newYear.options.tooltip || {}),
+            x: {
+              show: true,
+              formatter: (val) => {
+                // val is month label like "Dec 2025" or "Dec"
+                const token = String(val).split(' ')[0];
+                return `Tháng: ${token}`;
+              }
+            },
+            y: { title: { formatter: () => '' } }
+          };
+          newYear.options = newYear.options || {};
+          newYear.options.yaxis = {
+            ...(newYear.options.yaxis || {}),
+            min: 0,
+            max: overallScale,
+            labels: { show: false },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+          };
+          newYear.options.grid = { ...(newYear.options.grid || {}), show: false };
+
+          setChartMonthConfig(newMonth);
+          setChartYearConfig(newYear);
         } else {
           setTotalOrders(0);
         }
@@ -82,6 +157,55 @@ export default function TotalOrderLineChartCard({ isLoading: propIsLoading }) {
     } else {
       return orders.filter((o) => getDateOnly(o.createdAt)?.startsWith(currentYear)).length;
     }
+  };
+
+  // build daily series for current month (1..daysInMonth)
+  const buildDailySeriesForCurrentMonth = (orders) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const series = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const count = orders.filter((o) => o.createdAt && o.createdAt.startsWith(dayStr)).length;
+      series.push(count);
+    }
+    return series;
+  };
+
+  const buildDailyLabelsForCurrentMonth = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const labels = [];
+    for (let d = 1; d <= daysInMonth; d++) labels.push(String(d));
+    return labels;
+  };
+
+  // build monthly series for the current year (Jan..Dec)
+  const buildMonthlySeriesForYear = (orders) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const series = [];
+    for (let m = 0; m < 12; m++) {
+      const prefix = `${year}-${String(m + 1).padStart(2, '0')}`;
+      const count = orders.filter((o) => o.createdAt && o.createdAt.startsWith(prefix)).length;
+      series.push(count);
+    }
+    return series;
+  };
+
+  const buildLast12MonthsLabels = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const labels = [];
+    for (let m = 0; m < 12; m++) {
+      const d = new Date(year, m, 1);
+      labels.push(d.toLocaleString(undefined, { month: 'short', year: 'numeric' }));
+    }
+    return labels;
   };
 
   return (
@@ -207,7 +331,7 @@ export default function TotalOrderLineChartCard({ isLoading: propIsLoading }) {
                       }
                     }}
                   >
-                    {timeValue ? <Chart {...ChartDataMonth} /> : <Chart {...ChartDataYear} />}
+                    {timeValue ? <Chart {...chartMonthConfig} /> : <Chart {...chartYearConfig} />}
                   </Grid>
                 </Grid>
               </Grid>
