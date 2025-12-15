@@ -2,6 +2,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
+import { Image as ImageIcon } from 'lucide-react'; // Đảm bảo bạn import ImageIcon từ lucide-react hoặc @mui/icons-material
 import {
   Box,
   Button,
@@ -52,6 +53,7 @@ export default function ListCategory() {
   };
 
   const handleEdit = (item) => {
+    // initialData giờ sẽ chứa cả trường image.url và image.name
     setEditing(item);
     setDialogOpen(true);
   };
@@ -65,7 +67,6 @@ export default function ListCategory() {
   const handleConfirmDelete = async (id) => {
     setOpenConfirm(false);
     const previousRows = rows;
-    // optimistic remove
     setRows((r) => r.filter((x) => x.id !== id));
     try {
       const res = await categoryService.delete(id);
@@ -81,11 +82,12 @@ export default function ListCategory() {
     }
   };
 
-  // payload: { name, ... }, mode: 'create' | 'edit', id: optional id when editing
-  const handleSave = async (payload, mode, id) => {
+  // Payload giờ chứa { id, name, imageUrl, imageName }
+  const handleSave = async (payload, mode) => {
     try {
       if (mode === 'create') {
-        const res = await categoryService.create({ name: payload.name });
+        // Gửi payload đầy đủ (name, imageUrl, imageName)
+        const res = await categoryService.create(payload);
         if (!res || res.success === false) {
           showSnackbar({ message: res?.message || 'Failed to create category', severity: 'error' });
           return;
@@ -94,8 +96,9 @@ export default function ListCategory() {
         setRows((r) => [created, ...r]);
         showSnackbar({ message: 'Category created', severity: 'success' });
       } else {
-        const targetId = id || payload.id;
-        const res = await categoryService.update(targetId, { name: payload.name });
+        const targetId = payload.id;
+        // Gửi payload đầy đủ (name, imageUrl, imageName)
+        const res = await categoryService.update(targetId, payload);
         if (!res || res.success === false) {
           showSnackbar({ message: res?.message || 'Failed to update category', severity: 'error' });
           return;
@@ -142,6 +145,7 @@ export default function ListCategory() {
           <TableHead>
             <TableRow>
               <TableCell sx={{ width: 80 }}>No.</TableCell>
+              <TableCell sx={{ width: 100 }}>Image</TableCell>
               <TableCell>Name</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -150,6 +154,27 @@ export default function ListCategory() {
             {filtered.map((row, idx) => (
               <TableRow key={row.id} hover>
                 <TableCell>{idx + 1}</TableCell>
+                <TableCell>
+                  {' '}
+                  {/* <<< HIỂN THỊ IMAGE */}
+                  {row.image?.url ? (
+                    <img src={row.image.url} alt={row.name} style={{ width: 60, height: 40, objectFit: 'cover', borderRadius: 4 }} />
+                  ) : (
+                    <Box
+                      sx={{
+                        width: 60,
+                        height: 40,
+                        bgcolor: '#f0f0f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 4
+                      }}
+                    >
+                      <ImageIcon size={18} color="gray" />
+                    </Box>
+                  )}
+                </TableCell>
                 <TableCell>{row.name}</TableCell>
                 <TableCell align="right">
                   <IconButton size="small" color="primary" aria-label="edit" onClick={() => handleEdit(row)}>
