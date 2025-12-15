@@ -18,6 +18,7 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
 // menu list routing
 const ListFood = Loadable(lazy(() => import('views/pages/menu/ListFood')));
+const ManageTags = Loadable(lazy(() => import('views/pages/menu/ManageTags')));
 
 // combo list routing
 const ListCombo = Loadable(lazy(() => import('views/pages/combo/ListCombo')));
@@ -68,6 +69,10 @@ const MainRoutes = {
         {
           path: 'list-food',
           element: <ListFood />
+        },
+        {
+          path: 'manage-tags',
+          element: <ManageTags />
         }
       ]
     },
