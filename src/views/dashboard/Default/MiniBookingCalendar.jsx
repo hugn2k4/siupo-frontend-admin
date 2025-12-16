@@ -113,7 +113,11 @@ export default function MiniBookingCalendar({ isLoading: propIsLoading }) {
   };
 
   const handleToday = () => {
-    setCurrentMonth(new Date());
+    const today = new Date();
+    if (today.getMonth() === currentMonth.getMonth() && today.getFullYear() === currentMonth.getFullYear()) return;
+
+    const direction = today > currentMonth ? 'left' : 'right';
+    setTransition({ from: currentMonth, to: today, direction });
   };
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -348,35 +352,42 @@ export default function MiniBookingCalendar({ isLoading: propIsLoading }) {
     if (!transition) return;
     animatingRef.current = true;
     const track = trackRef.current;
-    // start position depends on direction
     if (!track) return;
-    if (transition.direction === 'left') {
-      // move track to show first (from) on left and to on right
-      track.style.transform = 'translateX(0%)';
-      // trigger to slide left
-      requestAnimationFrame(() => {
-        track.style.transform = 'translateX(-50%)';
-      });
-    } else {
-      // direction === 'right' -> new month enters from left
-      track.style.transform = 'translateX(-50%)';
-      requestAnimationFrame(() => {
-        track.style.transform = 'translateX(0%)';
-      });
-    }
+
+    const duration = 360; // ms
+    const easing = 'cubic-bezier(0.4, 0, 0.2, 1)';
+
+    // GPU hinting
+    track.style.willChange = 'transform';
+    track.style.backfaceVisibility = 'hidden';
+
+    // Ensure initial position without transition, force reflow, then animate
+    track.style.transition = 'none';
+    track.style.transform = transition.direction === 'left' ? 'translate3d(0,0,0)' : 'translate3d(-50%,0,0)';
+    // force reflow
+
+    track.offsetHeight;
+
+    requestAnimationFrame(() => {
+      track.style.transition = `transform ${duration}ms ${easing}`;
+      track.style.transform = transition.direction === 'left' ? 'translate3d(-50%,0,0)' : 'translate3d(0,0,0)';
+    });
 
     const onEnd = () => {
-      // finalize
       setCurrentMonth(transition.to);
       setTransition(null);
       animatingRef.current = false;
+      // cleanup inline styles
+      track.style.transition = '';
+      track.style.willChange = '';
+      track.style.backfaceVisibility = '';
       track.removeEventListener('transitionend', onEnd);
     };
 
     track.addEventListener('transitionend', onEnd);
-    // cleanup in case
+
     return () => {
-      if (track) track.removeEventListener('transitionend', onEnd);
+      track.removeEventListener('transitionend', onEnd);
     };
   }, [transition]);
 
@@ -447,20 +458,22 @@ export default function MiniBookingCalendar({ isLoading: propIsLoading }) {
         <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
           {/* When transitioning, show two months side-by-side and animate via CSS transform */}
           <Box className="month-slide-wrapper">
-            <Box
-              className="month-slide-track"
-              ref={trackRef}
-              style={
-                transition
-                  ? transition.direction === 'left'
-                    ? { transform: 'translateX(0%)' }
-                    : { transform: 'translateX(-50%)' }
-                  : { transform: 'translateX(0%)' }
-              }
-            >
-              <Box className="month-slide-item">{renderMonth(transition ? transition.from : currentMonth)}</Box>
-              <Box className="month-slide-item">{renderMonth(transition ? transition.to : currentMonth)}</Box>
-            </Box>
+            {transition ? (
+              <Box
+                className="month-slide-track"
+                ref={trackRef}
+                style={{
+                  transform: transition.direction === 'left' ? 'translateX(0%)' : 'translateX(-50%)'
+                }}
+              >
+                <Box className="month-slide-item">{renderMonth(transition.from)}</Box>
+                <Box className="month-slide-item">{renderMonth(transition.to)}</Box>
+              </Box>
+            ) : (
+              <Box className="month-slide-track">
+                <Box className="month-slide-item">{renderMonth(currentMonth)}</Box>
+              </Box>
+            )}
           </Box>
         </Box>
       </MainCard>
