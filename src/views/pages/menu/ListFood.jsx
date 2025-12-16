@@ -212,7 +212,8 @@ export default function ListFood() {
               description: payload.description,
               price: payload.price,
               categoryId: payload.categoryId ?? payload.category?.id ?? null,
-              imageUrls: urls
+              imageUrls: urls,
+              tags: payload.tags || []
             };
             res = await productService.createProduct(body);
           } else {
@@ -221,7 +222,8 @@ export default function ListFood() {
               description: payload.description,
               price: payload.price,
               categoryId: payload.categoryId ?? payload.category?.id ?? null,
-              imageUrls: payload.imageUrls ?? payload.images ?? []
+              imageUrls: payload.imageUrls ?? payload.images ?? [],
+              tags: payload.tags || []
             };
             res = await productService.createProduct(body);
           }
@@ -282,7 +284,8 @@ export default function ListFood() {
               description: payload.description,
               price: payload.price,
               categoryId: payload.categoryId ?? payload.category?.id ?? null,
-              imageUrls: combined
+              imageUrls: combined,
+              tags: payload.tags || []
             };
             res = await productService.updateProduct(payload.id, body);
           } else {
@@ -291,7 +294,8 @@ export default function ListFood() {
               description: payload.description,
               price: payload.price,
               categoryId: payload.categoryId ?? payload.category?.id ?? null,
-              imageUrls: keptExistingUrls
+              imageUrls: keptExistingUrls,
+              tags: payload.tags || []
             };
             res = await productService.updateProduct(payload.id, body);
           }
@@ -540,6 +544,7 @@ export default function ListFood() {
               <TableCell align="right">
                 <TableSortLabel>Price</TableSortLabel>
               </TableCell>
+              <TableCell align="left">Tags</TableCell>
               <TableCell align="center">Status</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
@@ -547,19 +552,19 @@ export default function ListFood() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   {`Error: ${error}`}
                 </TableCell>
               </TableRow>
             ) : dataRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   No items
                 </TableCell>
               </TableRow>
@@ -597,6 +602,20 @@ export default function ListFood() {
                     </Typography>
                   </TableCell>
                   <TableCell align="right">{Number(row.price).toLocaleString()} $</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: 200 }}>
+                      {row.tags && row.tags.length > 0 ? (
+                        row.tags
+                          .slice(0, 3)
+                          .map((tag, idx) => <Chip key={idx} label={tag} size="small" color="primary" variant="outlined" />)
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          No tags
+                        </Typography>
+                      )}
+                      {row.tags && row.tags.length > 3 && <Chip label={`+${row.tags.length - 3}`} size="small" variant="outlined" />}
+                    </Box>
+                  </TableCell>
                   <TableCell align="center">
                     {/* guard against undefined status */}
                     <Chip
