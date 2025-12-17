@@ -5,13 +5,16 @@ import Grid from '@mui/material/Grid';
 
 // project imports
 import EarningCard from './EarningCard';
-import PopularCard from './PopularCard';
 import TotalOrderLineChartCard from './TotalOrderLineChartCard';
 import BookingStatsCard from './BookingStatsCard';
 import TotalIncomeLightCard from '../../../ui-component/cards/TotalIncomeLightCard';
 import orderApi from '../../../api/orderApi';
 import TotalGrowthBarChart from './TotalGrowthBarChart';
 import MiniBookingCalendar from './MiniBookingCalendar';
+import RevenueMetrics from './RevenueMetrics';
+import CancelRateMetrics from './CancelRateMetrics';
+import OrderStatusChart from './OrderStatusChart';
+import TopSellingProducts from './TopSellingProducts';
 
 import { gridSpacing } from 'store/constant';
 
@@ -74,20 +77,32 @@ export default function Dashboard() {
           </Grid>
         </Grid>
       </Grid>
+      {/* Revenue & Cancel Rate Metrics - Thống kê doanh thu và tỉ lệ hủy */}
+      <Grid size={12}>
+        <Grid container spacing={gridSpacing}>
+          <RevenueMetrics />
+          <CancelRateMetrics />
+        </Grid>
+      </Grid>
+      {/* Charts Row - Biểu đồ */}
       <Grid size={12}>
         <Grid container spacing={gridSpacing}>
           <Grid size={{ xs: 12, md: 8 }}>
             <TotalGrowthBarChart isLoading={isLoading} />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <PopularCard isLoading={isLoading} />
+            <OrderStatusChart />
           </Grid>
         </Grid>
       </Grid>
+      {/* Calendar & Top Selling Products */}
       <Grid size={12}>
         <Grid container spacing={gridSpacing}>
-          <Grid size={{ xs: 12, md: 12, lg: 12 }}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <MiniBookingCalendar isLoading={isLoading} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TopSellingProducts />
           </Grid>
         </Grid>
       </Grid>

@@ -94,16 +94,10 @@ const pages = {
       icon: icons.IconTable,
       children: [
         {
-          id: 'place-table-for-guest',
-          title: 'Place Table for Guest',
+          id: 'booking-management',
+          title: 'Booking Management',
           type: 'item',
-          url: '/place-table/place-table-for-guest'
-        },
-        {
-          id: 'place-table-for-customer',
-          title: 'Place Table for Customer',
-          type: 'item',
-          url: '/place-table/place-table-for-customer'
+          url: '/place-table/bookings'
         }
       ]
     },
