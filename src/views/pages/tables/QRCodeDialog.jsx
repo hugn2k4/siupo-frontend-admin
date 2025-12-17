@@ -5,8 +5,8 @@ import { QRCodeSVG } from 'qrcode.react';
 export default function QRCodeDialog({ open, onClose, tableData }) {
   if (!tableData) return null;
 
-  // Generate URL for QR code - adjust this URL to match your frontend order page
-  const orderUrl = `${window.location.origin}/order-at-table?tableId=${tableData.id}`;
+  // Generate URL for QR code - points to customer frontend
+  const orderUrl = `http://localhost:5173/order-at-table?tableId=${tableData.id}`;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
