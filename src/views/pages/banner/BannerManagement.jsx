@@ -1,8 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Edit2, Trash2, Image as ImageIcon, Save, X, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import bannerApi from '../../../api/bannerApi';
 import uploadApi from '../../../api/uploadApi';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+
+// 12 fixed banner positions
+const BANNER_POSITIONS = [
+  { value: 'Home1', label: 'Home - Position 1' },
+  { value: 'Home2', label: 'Home - Position 2' },
+  { value: 'Menu1', label: 'Menu - Position 1' },
+  { value: 'Menu2', label: 'Menu - Position 2' },
+  { value: 'Menu3', label: 'Menu - Position 3' },
+  { value: 'Menu4', label: 'Menu - Position 4' },
+  { value: 'AboutUs1', label: 'About Us - Position 1' },
+  { value: 'AboutUs2', label: 'About Us - Position 2' },
+  { value: 'AboutUs3', label: 'About Us - Position 3' },
+  { value: 'AboutUs4', label: 'About Us - Position 4' },
+  { value: 'AboutUs5', label: 'About Us - Position 5' },
+  { value: 'PlaceTable1', label: 'Place Table - Position 1' }
+];
 
 const BannerManagement = () => {
   const [banners, setBanners] = useState([]);
@@ -14,6 +30,11 @@ const BannerManagement = () => {
   const [notifications, setNotifications] = useState([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
+
+  // Calculate occupied positions (excluding current editing banner)
+  const occupiedPositions = useMemo(() => {
+    return banners.filter((b) => currentBanner?.id !== b.id).map((b) => b.position);
+  }, [banners, currentBanner]);
 
   useEffect(() => {
     fetchBanners();
@@ -45,9 +66,21 @@ const BannerManagement = () => {
     fetchBanners();
   }, [fetchBanners]);
 
-  const handleAdd = () => {
+  // Merge positions with actual banners
+  const positionSlots = useMemo(() => {
+    return BANNER_POSITIONS.map((pos) => {
+      const banner = banners.find((b) => b.position === pos.value);
+      return {
+        position: pos.value,
+        label: pos.label,
+        banner: banner || null
+      };
+    });
+  }, [banners]);
+
+  const handleAdd = (position = '') => {
     setCurrentBanner(null);
-    setFormData({ name: '', url: '', position: '' });
+    setFormData({ name: '', url: '', position });
     setIsModalOpen(true);
   };
 
@@ -154,17 +187,16 @@ const BannerManagement = () => {
           <h1 style={styles.title}>Banner Management</h1>
           <p style={styles.subtitle}>Manage banners, promotional images and display content</p>
         </div>
-        <button style={styles.addButton} onClick={handleAdd}>
-          <Plus size={20} />
-          Add New Banner
-        </button>
       </div>
 
       {/* Stats */}
       <div style={styles.statsContainer}>
         <div style={styles.statCard}>
           <div style={styles.statLabel}>Total Banners</div>
-          <div style={styles.statValue}>{banners.length}</div>
+          <div style={styles.statValue}>
+            {banners.length} / {BANNER_POSITIONS.length}
+          </div>
+          <small style={styles.statSubtext}>{BANNER_POSITIONS.length - banners.length} positions available</small>
         </div>
       </div>
 
@@ -178,44 +210,62 @@ const BannerManagement = () => {
           <table style={styles.table}>
             <thead>
               <tr style={styles.tableHeader}>
+                <th style={styles.th}>Position</th>
                 <th style={styles.th}>Image</th>
-                <th style={styles.th}>Banner Name</th>
                 <th style={styles.th}>Created Date</th>
                 <th style={styles.th}>Updated</th>
                 <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {banners
-                .sort((a, b) => a.position - b.position)
-                .map((banner) => (
-                  <tr key={banner.id} style={styles.tableRow}>
-                    <td style={styles.td}>
-                      <div style={styles.imageContainer}>
-                        <img src={banner.url} alt={banner.name} style={styles.thumbnail} />
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={styles.bannerName}>{banner.name}</div>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={styles.dateText}>{new Date(banner.createdAt).toLocaleDateString('vi-VN')}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={styles.dateText}>{new Date(banner.updatedAt).toLocaleDateString('vi-VN')}</span>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={styles.actionButtons}>
-                        <button style={styles.actionBtnPrimary} onClick={() => handleEdit(banner)} title="Edit">
-                          <Edit2 size={16} />
+              {positionSlots.map((slot) => (
+                <tr key={slot.position} style={styles.tableRow}>
+                  <td style={styles.td}>
+                    <div style={styles.positionLabel}>{slot.label}</div>
+                  </td>
+                  {slot.banner ? (
+                    // Has banner - show banner info
+                    <>
+                      <td style={styles.td}>
+                        <div style={styles.imageContainer}>
+                          <img src={slot.banner.url} alt={slot.banner.name} style={styles.thumbnail} />
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={styles.dateText}>{new Date(slot.banner.createdAt).toLocaleDateString('vi-VN')}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={styles.dateText}>{new Date(slot.banner.updatedAt).toLocaleDateString('vi-VN')}</span>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={styles.actionButtons}>
+                          <button style={styles.actionBtnPrimary} onClick={() => handleEdit(slot.banner)} title="Edit">
+                            <Edit2 size={16} />
+                          </button>
+                          <button style={styles.actionBtnDanger} onClick={() => handleDelete(slot.banner.id)} title="Delete">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    // Empty slot - show add button
+                    <>
+                      <td colSpan="3" style={styles.td}>
+                        <div style={styles.emptySlot}>
+                          <span style={styles.emptyText}>No banner assigned</span>
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <button style={styles.addBannerBtn} onClick={() => handleAdd(slot.position)} title="Add Banner">
+                          <Plus size={16} />
+                          Add Banner
                         </button>
-                        <button style={styles.actionBtnDanger} onClick={() => handleDelete(banner.id)} title="Delete">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
@@ -271,16 +321,27 @@ const BannerManagement = () => {
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Display Position *</label>
-                <input
-                  type="text"
-                  style={styles.input}
+                <select
+                  style={styles.select}
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  placeholder="Home "
-                  min="1"
                   required
-                />
-                <small style={styles.helpText}>Lower numbers will be displayed first</small>
+                >
+                  <option value="">Select position...</option>
+                  {BANNER_POSITIONS.map((pos) => {
+                    const isOccupied = occupiedPositions.includes(pos.value);
+                    return (
+                      <option key={pos.value} value={pos.value} disabled={isOccupied}>
+                        {pos.label} {isOccupied ? '(Occupied)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                <small style={styles.helpText}>
+                  {formData.position && occupiedPositions.includes(formData.position)
+                    ? '⚠️ Position already occupied'
+                    : 'Select an available position for the banner'}
+                </small>
               </div>
 
               {formData.url && (
@@ -421,6 +482,42 @@ const styles = {
     fontSize: '32px',
     fontWeight: '700',
     color: '#1a1a1a'
+  },
+  statSubtext: {
+    display: 'block',
+    marginTop: '4px',
+    fontSize: '13px',
+    color: '#10b981',
+    fontWeight: '500'
+  },
+  positionLabel: {
+    fontWeight: '600',
+    color: '#3b82f6',
+    fontSize: '13px'
+  },
+  emptySlot: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  emptyText: {
+    color: '#9ca3af',
+    fontSize: '14px',
+    fontStyle: 'italic'
+  },
+  addBannerBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '8px 16px',
+    backgroundColor: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
   },
   tableContainer: {
     backgroundColor: 'white',
@@ -583,6 +680,18 @@ const styles = {
     outline: 'none',
     transition: 'border-color 0.2s',
     boxSizing: 'border-box'
+  },
+  select: {
+    width: '100%',
+    padding: '12px',
+    fontSize: '14px',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
+    backgroundColor: 'white',
+    cursor: 'pointer'
   },
   helpText: {
     display: 'block',
