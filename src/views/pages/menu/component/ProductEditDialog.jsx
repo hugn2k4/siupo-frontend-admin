@@ -23,6 +23,7 @@ import {
 import { useSnackbar } from 'contexts/SnackbarProvider';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import tagService from '../../../../services/tagService';
 
 const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categories = [] }) => {
   const { control, handleSubmit, reset } = useForm({
@@ -31,7 +32,8 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
       price: initialData?.price || 0,
       description: initialData?.description || '',
       categoryId: initialData?.category?.id || '',
-      images: initialData?.images || []
+      images: initialData?.images || [],
+      tags: initialData?.tags || []
     }
   });
 
@@ -63,6 +65,22 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
   const [previews, setPreviews] = React.useState([]);
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [previewUrl, setPreviewUrl] = React.useState(null);
+  const [availableTags, setAvailableTags] = React.useState([]);
+  const [selectedTags, setSelectedTags] = React.useState(initialData?.tags || []);
+
+  // Load available tags
+  React.useEffect(() => {
+    const loadTags = async () => {
+      try {
+        const response = await tagService.getAllTags();
+        const tagList = response.data || response || [];
+        setAvailableTags(tagList);
+      } catch (error) {
+        console.error('Error loading tags:', error);
+      }
+    };
+    loadTags();
+  }, []);
 
   React.useEffect(() => {
     reset({
@@ -70,8 +88,10 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
       price: initialData?.price || 0,
       description: initialData?.description || '',
       categoryId: initialData?.category?.id || '',
-      images: initialData?.imageUrls || []
+      images: initialData?.imageUrls || [],
+      tags: initialData?.tags || []
     });
+    setSelectedTags(initialData?.tags || []);
     // normalize existing images into objects { id, url }
     const arr = initialData?.images ?? initialData?.imageUrls ?? [];
     const normalized = Array.isArray(arr)
@@ -131,7 +151,8 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
       description: data.description,
       price: data.price,
       categoryId: data.categoryId ? Number(data.categoryId) : (initialData?.category?.id ?? null),
-      imageUrls: existingImages.map((img) => getImageUrl(img))
+      imageUrls: existingImages.map((img) => getImageUrl(img)),
+      tags: selectedTags
     };
 
     // include raw File[] for upload when present
@@ -202,6 +223,38 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
                   control={control}
                   render={({ field }) => <TextField {...field} label="Description" fullWidth multiline rows={4} size="small" />}
                 />
+
+                {/* Tags Section */}
+                <Box>
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="tags-label">Tags</InputLabel>
+                    <Select
+                      labelId="tags-label"
+                      multiple
+                      value={selectedTags}
+                      onChange={(e) => setSelectedTags(e.target.value)}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {selected.map((value) => (
+                            <Chip key={value} label={value} size="small" />
+                          ))}
+                        </Box>
+                      )}
+                      label="Tags"
+                    >
+                      {availableTags.map((tag) => (
+                        <MenuItem key={tag.id} value={tag.name}>
+                          {tag.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {availableTags.length === 0 && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      No tags available. Create tags in Manage Tags page first.
+                    </Typography>
+                  )}
+                </Box>
               </Stack>
             </Grid>
 

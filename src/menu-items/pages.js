@@ -9,6 +9,7 @@ import {
   IconSettings,
   IconShoppingCart,
   IconTable,
+  IconTag,
   IconTicket,
   IconUser
 } from '@tabler/icons-react';
@@ -25,7 +26,8 @@ const icons = {
   IconPackage,
   IconPhoto,
   IconBell,
-  IconTicket
+  IconTicket,
+  IconTag
 };
 
 // ==============================|| EXTRA PAGES MENU ITEMS ||============================== //
@@ -48,6 +50,12 @@ const pages = {
           title: 'List Food',
           type: 'item',
           url: '/menu/list-food'
+        },
+        {
+          id: 'manage-tags',
+          title: 'Manage Tags',
+          type: 'item',
+          url: '/menu/manage-tags'
         }
       ]
     },
