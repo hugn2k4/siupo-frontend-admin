@@ -30,6 +30,7 @@ const ListCategory = Loadable(lazy(() => import('views/pages/category/ListCatego
 const AccountProfile = Loadable(lazy(() => import('views/pages/account/Profile')));
 // order table routing
 const BookingManagement = Loadable(lazy(() => import('views/pages/place-table/BookingManagement')));
+const TableManagement = Loadable(lazy(() => import('views/pages/tables/TableManagement')));
 const NotificationManagement = Loadable(lazy(() => import('views/pages/notificationsmanage/NotificationManagement')));
 const BannerManagement = Loadable(lazy(() => import('views/pages/banner/BannerManagement')));
 const UserList = Loadable(lazy(() => import('views/pages/users/UserList')));
@@ -81,6 +82,15 @@ const MainRoutes = {
         {
           path: 'list-combo',
           element: <ListCombo />
+        }
+      ]
+    },
+    {
+      path: 'tables',
+      children: [
+        {
+          path: 'management',
+          element: <TableManagement />
         }
       ]
     },

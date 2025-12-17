@@ -287,18 +287,6 @@ const BannerManagement = () => {
 
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Banner Name *</label>
-                <input
-                  type="text"
-                  style={styles.input}
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="E.g: Holiday Promotion Banner"
-                  required
-                />
-              </div>
-
-              <div style={styles.formGroup}>
                 <label style={styles.label}>Upload Image</label>
                 <input type="file" accept="image/*" onChange={handleFileChange} style={styles.input} disabled={uploading} />
                 {uploading && <small style={{ ...styles.helpText, color: '#3b82f6' }}>⏳ Uploading...</small>}

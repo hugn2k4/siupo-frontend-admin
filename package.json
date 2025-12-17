@@ -31,6 +31,7 @@
     "lodash-es": "4.17.21",
     "lucide-react": "^0.553.0",
     "material-ui-popup-state": "5.3.5",
+    "qrcode.react": "^4.2.0",
     "react": "19.1.0",
     "react-apexcharts": "1.7.0",
     "react-dom": "19.1.0",
