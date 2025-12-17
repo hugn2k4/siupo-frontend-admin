@@ -94,6 +94,12 @@ const pages = {
       icon: icons.IconTable,
       children: [
         {
+          id: 'table-management',
+          title: 'Table Management',
+          type: 'item',
+          url: '/tables/management'
+        },
+        {
           id: 'booking-management',
           title: 'Booking Management',
           type: 'item',
