@@ -72,6 +72,7 @@ const BookingManagement = () => {
 
   useEffect(() => {
     fetchAllBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -82,6 +83,7 @@ const BookingManagement = () => {
   useEffect(() => {
     filterBookings();
     setPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerBookings, guestBookings, bookingType, selectedStatus, searchQuery]);
 
   const fetchAllBookings = async () => {
@@ -104,7 +106,7 @@ const BookingManagement = () => {
       calculateAllStatistics(customers, guests);
     } catch (err) {
       console.error('Error fetching bookings:', err);
-      setError('Không thể tải dữ liệu đơn đặt bàn. Vui lòng thử lại.');
+      setError('Unable to load booking data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -112,7 +114,7 @@ const BookingManagement = () => {
 
   const fetchByDateRange = async () => {
     if (!dateRange.start || !dateRange.end) {
-      showSnackbar({ message: 'Vui lòng chọn cả ngày bắt đầu và kết thúc', severity: 'warning' });
+      showSnackbar({ message: 'Please select both start and end dates', severity: 'warning' });
       return;
     }
     setLoading(true);
@@ -135,7 +137,7 @@ const BookingManagement = () => {
       calculateAllStatistics(customers, guests);
     } catch (err) {
       console.error('Error fetching by date range:', err);
-      setError('Không thể lọc theo khoảng thời gian. Vui lòng thử lại.');
+      setError('Unable to filter by date range. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -205,10 +207,10 @@ const BookingManagement = () => {
       }
       await fetchAllBookings();
       handleCloseDialog();
-      showSnackbar({ message: 'Đã xác nhận đơn đặt bàn', severity: 'success' });
+      showSnackbar({ message: 'Booking confirmed successfully', severity: 'success' });
     } catch (err) {
       console.error('Error confirming booking:', err);
-      showSnackbar({ message: 'Lỗi khi xác nhận: ' + (err.response?.data?.message || err.message), severity: 'error' });
+      showSnackbar({ message: 'Error confirming: ' + (err.response?.data?.message || err.message), severity: 'error' });
     } finally {
       setActionLoading(false);
     }
@@ -217,7 +219,7 @@ const BookingManagement = () => {
   const handleDeny = async () => {
     if (!selectedBooking) return;
     if (!note || note.trim() === '') {
-      showSnackbar({ message: 'Vui lòng nhập lý do từ chối', severity: 'warning' });
+      showSnackbar({ message: 'Please enter a reason for denial', severity: 'warning' });
       return;
     }
     setActionLoading(true);
@@ -229,10 +231,10 @@ const BookingManagement = () => {
       }
       await fetchAllBookings();
       handleCloseDialog();
-      showSnackbar({ message: 'Đã từ chối đơn đặt bàn', severity: 'info' });
+      showSnackbar({ message: 'Booking denied successfully', severity: 'info' });
     } catch (err) {
       console.error('Error denying booking:', err);
-      showSnackbar({ message: 'Lỗi khi từ chối: ' + (err.response?.data?.message || err.message), severity: 'error' });
+      showSnackbar({ message: 'Error denying: ' + (err.response?.data?.message || err.message), severity: 'error' });
     } finally {
       setActionLoading(false);
     }
@@ -253,10 +255,10 @@ const BookingManagement = () => {
         await managePlaceTable.completeGuestBooking(confirmTarget.id, null);
       }
       await fetchAllBookings();
-      showSnackbar({ message: 'Đã hoàn thành đơn đặt bàn', severity: 'success' });
+      showSnackbar({ message: 'Booking completed successfully', severity: 'success' });
     } catch (err) {
       console.error('Error completing booking:', err);
-      showSnackbar({ message: 'Lỗi khi hoàn thành: ' + (err.response?.data?.message || err.message), severity: 'error' });
+      showSnackbar({ message: 'Error completing: ' + (err.response?.data?.message || err.message), severity: 'error' });
     } finally {
       setActionLoading(false);
       setConfirmOpen(false);
@@ -280,7 +282,7 @@ const BookingManagement = () => {
 
   const exportCSV = () => {
     if (!filteredBookings || filteredBookings.length === 0) {
-      showSnackbar({ message: 'Không có dữ liệu để xuất', severity: 'info' });
+      showSnackbar({ message: 'No data to export', severity: 'info' });
       return;
     }
     const rows = filteredBookings.map((b) => {
@@ -290,7 +292,7 @@ const BookingManagement = () => {
 
       return {
         id: b.id,
-        type: b.type === 'customer' ? 'Khách hàng' : 'Khách vãng lai',
+        type: b.type === 'customer' ? 'Customer' : 'Walk-in',
         fullname: name || '',
         phone: b.phoneNumber || '',
         email: email || '',
@@ -314,13 +316,13 @@ const BookingManagement = () => {
   const getStatusChip = (status) => {
     switch (status) {
       case 'PENDING':
-        return <Chip label="Chờ xác nhận" color="warning" size="small" />;
+        return <Chip label="Pending" color="warning" size="small" />;
       case 'CONFIRMED':
-        return <Chip label="Đã xác nhận" color="success" size="small" />;
+        return <Chip label="Confirmed" color="success" size="small" />;
       case 'COMPLETED':
-        return <Chip label="Hoàn thành" color="default" size="small" />;
+        return <Chip label="Completed" color="default" size="small" />;
       case 'DENIED':
-        return <Chip label="Từ chối" color="error" size="small" />;
+        return <Chip label="Denied" color="error" size="small" />;
       default:
         return <Chip label={status} size="small" />;
     }
@@ -350,11 +352,11 @@ const BookingManagement = () => {
 
   const statsCards = useMemo(
     () => [
-      { key: 'total', label: 'Tổng', value: currentStats?.total || 0, color: 'info' },
-      { key: 'pending', label: 'Chờ', value: currentStats?.pending || 0, color: 'warning' },
-      { key: 'confirmed', label: 'Xác nhận', value: currentStats?.confirmed || 0, color: 'success' },
-      { key: 'completed', label: 'Hoàn thành', value: currentStats?.completed || 0, color: 'default' },
-      { key: 'denied', label: 'Từ chối', value: currentStats?.denied || 0, color: 'error' }
+      { key: 'total', label: 'Total', value: currentStats?.total || 0, color: 'info' },
+      { key: 'pending', label: 'Pending', value: currentStats?.pending || 0, color: 'warning' },
+      { key: 'confirmed', label: 'Confirmed', value: currentStats?.confirmed || 0, color: 'success' },
+      { key: 'completed', label: 'Completed', value: currentStats?.completed || 0, color: 'default' },
+      { key: 'denied', label: 'Denied', value: currentStats?.denied || 0, color: 'error' }
     ],
     [currentStats]
   );
@@ -369,9 +371,9 @@ const BookingManagement = () => {
       <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, p: 2, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <div>
-            <Typography variant="h3">Quản lý đơn đặt bàn</Typography>
+            <Typography variant="h3">Booking Management</Typography>
             <Typography variant="body2" color="text.secondary">
-              Quản lý tất cả đơn đặt bàn từ khách hàng và khách vãng lai
+              Manage all bookings from customers and walk-in guests
             </Typography>
           </div>
         </Box>
@@ -379,13 +381,13 @@ const BookingManagement = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <TextField
             size="small"
-            placeholder="Tìm theo tên, email hoặc SĐT"
+            placeholder="Search by name, email or phone"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{ startAdornment: <SearchIcon fontSize="small" /> }}
           />
 
-          <Tooltip title="Xuất CSV">
+          <Tooltip title="Export CSV">
             <span>
               <IconButton size="small" onClick={exportCSV} disabled={loading || filteredBookings.length === 0}>
                 <FileDownloadIcon fontSize="small" />
@@ -401,7 +403,7 @@ const BookingManagement = () => {
               setDateRange({ start: '', end: '' });
             }}
             disabled={loading}
-            title="Làm mới"
+            title="Refresh"
           >
             {loading ? <CircularProgress size={20} /> : <RefreshIcon />}
           </IconButton>
@@ -421,7 +423,7 @@ const BookingManagement = () => {
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <GroupIcon fontSize="small" />
-                  Tất cả ({statistics.all.total})
+                  All ({statistics.all.total})
                 </Box>
               }
               value="all"
@@ -430,7 +432,7 @@ const BookingManagement = () => {
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <PersonIcon fontSize="small" />
-                  Khách hàng ({statistics.customer.total})
+                  Customers ({statistics.customer.total})
                 </Box>
               }
               value="customer"
@@ -439,7 +441,7 @@ const BookingManagement = () => {
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <EventIcon fontSize="small" />
-                  Khách vãng lai ({statistics.guest.total})
+                  Walk-in Guests ({statistics.guest.total})
                 </Box>
               }
               value="guest"
@@ -468,7 +470,7 @@ const BookingManagement = () => {
           <TextField
             type="date"
             size="small"
-            label="Từ ngày"
+            label="From Date"
             InputLabelProps={{ shrink: true }}
             value={dateRange.start}
             onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
@@ -476,21 +478,21 @@ const BookingManagement = () => {
           <TextField
             type="date"
             size="small"
-            label="Đến ngày"
+            label="To Date"
             InputLabelProps={{ shrink: true }}
             value={dateRange.end}
             onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
           />
           <Button variant="outlined" size="small" onClick={fetchByDateRange} disabled={!dateRange.start || !dateRange.end}>
-            Lọc theo ngày
+            Filter by Date
           </Button>
 
           <Select size="small" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} sx={{ minWidth: 140 }}>
-            <MenuItem value="all">Tất cả trạng thái</MenuItem>
-            <MenuItem value="PENDING">Chờ xác nhận</MenuItem>
-            <MenuItem value="CONFIRMED">Đã xác nhận</MenuItem>
-            <MenuItem value="COMPLETED">Hoàn thành</MenuItem>
-            <MenuItem value="DENIED">Từ chối</MenuItem>
+            <MenuItem value="all">All Statuses</MenuItem>
+            <MenuItem value="PENDING">Pending</MenuItem>
+            <MenuItem value="CONFIRMED">Confirmed</MenuItem>
+            <MenuItem value="COMPLETED">Completed</MenuItem>
+            <MenuItem value="DENIED">Denied</MenuItem>
           </Select>
         </Box>
 
@@ -499,13 +501,13 @@ const BookingManagement = () => {
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
-                <TableCell>Loại</TableCell>
-                <TableCell>Tên khách</TableCell>
-                <TableCell>Liên hệ</TableCell>
-                <TableCell>Ngày - Giờ</TableCell>
-                <TableCell>Số khách</TableCell>
-                <TableCell>Trạng thái</TableCell>
-                <TableCell align="right">Thao tác</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Guest Name</TableCell>
+                <TableCell>Contact</TableCell>
+                <TableCell>Date - Time</TableCell>
+                <TableCell>Guests</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -520,7 +522,7 @@ const BookingManagement = () => {
                   <TableCell colSpan={8} align="center">
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
                       <EventIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                      <Typography>Không có đơn đặt bàn nào</Typography>
+                      <Typography>No bookings found</Typography>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -535,7 +537,7 @@ const BookingManagement = () => {
                       <TableCell>#{booking.id}</TableCell>
                       <TableCell>
                         <Chip
-                          label={booking.type === 'customer' ? 'Khách hàng' : 'Vãng lai'}
+                          label={booking.type === 'customer' ? 'Customer' : 'Walk-in'}
                           size="small"
                           color={booking.type === 'customer' ? 'primary' : 'default'}
                           variant="outlined"
@@ -556,11 +558,11 @@ const BookingManagement = () => {
                         <Typography variant="body2">{booking.phoneNumber || '-'}</Typography>
                       </TableCell>
                       <TableCell>{formatDateTime(booking.startedAt)}</TableCell>
-                      <TableCell>{members || '-'} người</TableCell>
+                      <TableCell>{members || '-'} guests</TableCell>
                       <TableCell>{getStatusChip(booking.status)}</TableCell>
                       <TableCell align="right">
                         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                          <IconButton size="small" onClick={() => handleOpenDialog(booking, 'view')} title="Chi tiết">
+                          <IconButton size="small" onClick={() => handleOpenDialog(booking, 'view')} title="Details">
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
                           {booking.status === 'PENDING' && (
@@ -569,7 +571,7 @@ const BookingManagement = () => {
                                 size="small"
                                 onClick={() => handleOpenDialog(booking, 'confirm')}
                                 disabled={actionLoading}
-                                title="Xác nhận"
+                                title="Confirm"
                               >
                                 <CheckIcon fontSize="small" />
                               </IconButton>
@@ -577,14 +579,14 @@ const BookingManagement = () => {
                                 size="small"
                                 onClick={() => handleOpenDialog(booking, 'deny')}
                                 disabled={actionLoading}
-                                title="Từ chối"
+                                title="Deny"
                               >
                                 <CloseIcon fontSize="small" />
                               </IconButton>
                             </>
                           )}
                           {booking.status === 'CONFIRMED' && (
-                            <IconButton size="small" onClick={() => handleComplete(booking)} disabled={actionLoading} title="Hoàn thành">
+                            <IconButton size="small" onClick={() => handleComplete(booking)} disabled={actionLoading} title="Complete">
                               <DoneAllIcon fontSize="small" />
                             </IconButton>
                           )}
@@ -614,29 +616,29 @@ const BookingManagement = () => {
 
       <Dialog open={showDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
         <DialogTitle>
-          {dialogAction === 'confirm' && 'Xác nhận đơn đặt bàn'}
-          {dialogAction === 'deny' && 'Từ chối đơn đặt bàn'}
-          {dialogAction === 'view' && `Chi tiết đơn đặt bàn #${selectedBooking?.id || ''}`}
+          {dialogAction === 'confirm' && 'Confirm Booking'}
+          {dialogAction === 'deny' && 'Deny Booking'}
+          {dialogAction === 'view' && `Booking Details #${selectedBooking?.id || ''}`}
         </DialogTitle>
         <DialogContent dividers>
           {selectedBooking ? (
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 1.5 }}>
               <Box>
-                <Typography variant="subtitle2">Loại khách</Typography>
+                <Typography variant="subtitle2">Guest Type</Typography>
                 <Chip
-                  label={selectedBooking.type === 'customer' ? 'Khách hàng' : 'Khách vãng lai'}
+                  label={selectedBooking.type === 'customer' ? 'Customer' : 'Walk-in Guest'}
                   size="small"
                   color={selectedBooking.type === 'customer' ? 'primary' : 'default'}
                 />
               </Box>
               <Box>
-                <Typography variant="subtitle2">Tên khách</Typography>
+                <Typography variant="subtitle2">Guest Name</Typography>
                 <Typography>
                   {selectedBooking.type === 'customer' ? selectedBooking.user?.fullname : selectedBooking.fullname || '-'}
                 </Typography>
               </Box>
               <Box>
-                <Typography variant="subtitle2">SĐT</Typography>
+                <Typography variant="subtitle2">Phone</Typography>
                 <Typography>{selectedBooking.phoneNumber || '-'}</Typography>
               </Box>
               {(selectedBooking.user?.email || selectedBooking.email) && (
@@ -646,25 +648,25 @@ const BookingManagement = () => {
                 </Box>
               )}
               <Box>
-                <Typography variant="subtitle2">Ngày giờ</Typography>
+                <Typography variant="subtitle2">Date & Time</Typography>
                 <Typography>{formatDateTime(selectedBooking.startedAt)}</Typography>
               </Box>
               <Box>
-                <Typography variant="subtitle2">Số khách</Typography>
+                <Typography variant="subtitle2">Number of Guests</Typography>
                 <Typography>
                   {selectedBooking.type === 'customer'
                     ? selectedBooking.member || selectedBooking.memberInt || '-'
                     : selectedBooking.memberInt || '-'}{' '}
-                  người
+                  guests
                 </Typography>
               </Box>
               <Box>
-                <Typography variant="subtitle2">Trạng thái</Typography>
+                <Typography variant="subtitle2">Status</Typography>
                 <Box sx={{ mt: 0.5 }}>{getStatusChip(selectedBooking.status)}</Box>
               </Box>
               {selectedBooking.note && (
                 <Box>
-                  <Typography variant="subtitle2">Ghi chú</Typography>
+                  <Typography variant="subtitle2">Note</Typography>
                   <Typography>{selectedBooking.note}</Typography>
                 </Box>
               )}
@@ -678,7 +680,7 @@ const BookingManagement = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                       <RestaurantMenuIcon />
                       <Typography variant="subtitle1" fontWeight="bold">
-                        Món ăn đặt trước ({selectedBooking.items.length})
+                        Pre-ordered Items ({selectedBooking.items.length})
                       </Typography>
                     </Box>
                     <Box>
@@ -722,7 +724,7 @@ const BookingManagement = () => {
                           </Box>
                           <Box sx={{ flex: 1 }}>
                             <Typography variant="body1" fontWeight="medium">
-                              {item.product?.name || 'Món ăn'}
+                              {item.product?.name || 'Dish'}
                             </Typography>
                             {item.product?.description && (
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
@@ -731,7 +733,7 @@ const BookingManagement = () => {
                             )}
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                               <Typography variant="body2" color="text.secondary">
-                                Số lượng: <strong>{item.quantity}</strong>
+                                Quantity: <strong>{item.quantity}</strong>
                               </Typography>
                               <Typography variant="body2" color="primary" fontWeight="bold">
                                 {formatCurrency(item.price)}
@@ -752,7 +754,7 @@ const BookingManagement = () => {
                           borderColor: 'divider'
                         }}
                       >
-                        <Typography variant="h3">Tổng tiền:</Typography>
+                        <Typography variant="h3">Total Amount:</Typography>
                         <Typography variant="h3" color="primary" fontWeight="bold">
                           {formatCurrency(selectedBooking.totalPrice)}
                         </Typography>
@@ -765,7 +767,7 @@ const BookingManagement = () => {
                 <TextField
                   multiline
                   minRows={3}
-                  label={dialogAction === 'deny' ? 'Lý do từ chối (bắt buộc)' : 'Ghi chú của quản lý'}
+                  label={dialogAction === 'deny' ? 'Reason for denial (required)' : 'Admin Note'}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   fullWidth
@@ -774,21 +776,21 @@ const BookingManagement = () => {
               )}
             </Box>
           ) : (
-            <Typography>Không có dữ liệu</Typography>
+            <Typography>No data available</Typography>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={actionLoading}>
-            Hủy
+            Cancel
           </Button>
           {dialogAction === 'confirm' && (
             <Button variant="contained" onClick={handleConfirm} disabled={actionLoading}>
-              {actionLoading ? <CircularProgress size={16} /> : 'Xác nhận'}
+              {actionLoading ? <CircularProgress size={16} /> : 'Confirm'}
             </Button>
           )}
           {dialogAction === 'deny' && (
             <Button variant="contained" color="error" onClick={handleDeny} disabled={actionLoading || !note.trim()}>
-              {actionLoading ? <CircularProgress size={16} /> : 'Từ chối'}
+              {actionLoading ? <CircularProgress size={16} /> : 'Deny'}
             </Button>
           )}
         </DialogActions>
@@ -796,12 +798,12 @@ const BookingManagement = () => {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Xác nhận hoàn thành"
-        content="Xác nhận hoàn thành đơn đặt bàn này?"
+        title="Confirm Completion"
+        content="Confirm completion of this booking?"
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleConfirmComplete}
         loading={actionLoading}
-        confirmText="Hoàn thành"
+        confirmText="Complete"
       />
     </MainCard>
   );

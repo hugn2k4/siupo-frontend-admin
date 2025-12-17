@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit2, Trash2, Image as ImageIcon, Save, X, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import bannerApi from '../../../api/bannerApi';
 import uploadApi from '../../../api/uploadApi';
@@ -28,18 +28,22 @@ const BannerManagement = () => {
     }, 3000);
   };
 
-  const fetchBanners = async () => {
+  const fetchBanners = useCallback(async () => {
     setLoading(true);
     try {
       const response = await bannerApi.getAll();
       setBanners(response.data);
     } catch (error) {
       console.error('Error fetching banners:', error);
-      showNotification('Lỗi khi tải danh sách banner', 'error');
+      showNotification('Error loading banner list', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchBanners();
+  }, [fetchBanners]);
 
   const handleAdd = () => {
     setCurrentBanner(null);
@@ -66,11 +70,11 @@ const BannerManagement = () => {
     if (!confirmTarget) return;
     try {
       await bannerApi.delete(confirmTarget);
-      showNotification('Xóa banner thành công', 'success');
+      showNotification('Banner deleted successfully', 'success');
       fetchBanners();
     } catch (error) {
       console.error('Error deleting banner:', error);
-      showNotification('Lỗi khi xóa banner', 'error');
+      showNotification('Error deleting banner', 'error');
     } finally {
       setConfirmOpen(false);
       setConfirmTarget(null);
@@ -86,11 +90,11 @@ const BannerManagement = () => {
         const response = await uploadApi.uploadSingle(file);
         const newUrl = response;
         setFormData((prev) => ({ ...prev, url: newUrl }));
-        showNotification('Upload hình ảnh thành công', 'success');
+        showNotification('Image uploaded successfully', 'success');
         e.target.value = '';
       } catch (error) {
         console.error('Error uploading file:', error);
-        showNotification('Lỗi khi upload hình ảnh', 'error');
+        showNotification('Error uploading image', 'error');
       } finally {
         setUploading(false);
       }
@@ -109,16 +113,16 @@ const BannerManagement = () => {
     try {
       if (currentBanner) {
         await bannerApi.update(currentBanner.id, payload);
-        showNotification('Cập nhật banner thành công', 'success');
+        showNotification('Banner updated successfully', 'success');
       } else {
         await bannerApi.create(payload);
-        showNotification('Thêm banner thành công', 'success');
+        showNotification('Banner added successfully', 'success');
       }
       setIsModalOpen(false);
       fetchBanners();
     } catch (error) {
       console.error('Error saving banner:', error);
-      showNotification(error.response?.data?.message || 'Lỗi khi lưu banner', 'error');
+      showNotification(error.response?.data?.message || 'Error saving banner', 'error');
     }
   };
 
@@ -147,19 +151,19 @@ const BannerManagement = () => {
       {/* Header */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>Quản Lý Nội Dung Hiển Thị</h1>
-          <p style={styles.subtitle}>Quản lý banner, hình ảnh quảng cáo và nội dung hiển thị</p>
+          <h1 style={styles.title}>Banner Management</h1>
+          <p style={styles.subtitle}>Manage banners, promotional images and display content</p>
         </div>
         <button style={styles.addButton} onClick={handleAdd}>
           <Plus size={20} />
-          Thêm Banner Mới
+          Add New Banner
         </button>
       </div>
 
       {/* Stats */}
       <div style={styles.statsContainer}>
         <div style={styles.statCard}>
-          <div style={styles.statLabel}>Tổng Banner</div>
+          <div style={styles.statLabel}>Total Banners</div>
           <div style={styles.statValue}>{banners.length}</div>
         </div>
       </div>
@@ -167,18 +171,18 @@ const BannerManagement = () => {
       {/* Banner List */}
       <div style={styles.tableContainer}>
         {loading ? (
-          <div style={styles.loading}>Đang tải...</div>
+          <div style={styles.loading}>Loading...</div>
         ) : banners.length === 0 ? (
-          <div style={styles.empty}>Chưa có banner nào</div>
+          <div style={styles.empty}>No banners yet</div>
         ) : (
           <table style={styles.table}>
             <thead>
               <tr style={styles.tableHeader}>
-                <th style={styles.th}>Hình Ảnh</th>
-                <th style={styles.th}>Tên Banner</th>
-                <th style={styles.th}>Ngày Tạo</th>
-                <th style={styles.th}>Cập Nhật</th>
-                <th style={styles.th}>Thao Tác</th>
+                <th style={styles.th}>Image</th>
+                <th style={styles.th}>Banner Name</th>
+                <th style={styles.th}>Created Date</th>
+                <th style={styles.th}>Updated</th>
+                <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -202,10 +206,10 @@ const BannerManagement = () => {
                     </td>
                     <td style={styles.td}>
                       <div style={styles.actionButtons}>
-                        <button style={styles.actionBtnPrimary} onClick={() => handleEdit(banner)} title="Chỉnh sửa">
+                        <button style={styles.actionBtnPrimary} onClick={() => handleEdit(banner)} title="Edit">
                           <Edit2 size={16} />
                         </button>
-                        <button style={styles.actionBtnDanger} onClick={() => handleDelete(banner.id)} title="Xóa">
+                        <button style={styles.actionBtnDanger} onClick={() => handleDelete(banner.id)} title="Delete">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -224,7 +228,7 @@ const BannerManagement = () => {
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>
                 <ImageIcon size={24} />
-                {currentBanner ? 'Chỉnh Sửa Banner' : 'Thêm Banner Mới'}
+                {currentBanner ? 'Edit Banner' : 'Add New Banner'}
               </h2>
               <button style={styles.closeButton} onClick={() => setIsModalOpen(false)}>
                 <X size={24} />
@@ -233,26 +237,26 @@ const BannerManagement = () => {
 
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Tên Banner *</label>
+                <label style={styles.label}>Banner Name *</label>
                 <input
                   type="text"
                   style={styles.input}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="VD: Banner Khuyến Mãi Tết"
+                  placeholder="E.g: Holiday Promotion Banner"
                   required
                 />
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Upload Hình Ảnh</label>
+                <label style={styles.label}>Upload Image</label>
                 <input type="file" accept="image/*" onChange={handleFileChange} style={styles.input} disabled={uploading} />
-                {uploading && <small style={{ ...styles.helpText, color: '#3b82f6' }}>⏳ Đang upload...</small>}
-                {!uploading && <small style={styles.helpText}>Hoặc nhập URL bên dưới</small>}
+                {uploading && <small style={{ ...styles.helpText, color: '#3b82f6' }}>⏳ Uploading...</small>}
+                {!uploading && <small style={styles.helpText}>Or enter URL below</small>}
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>URL Hình Ảnh *</label>
+                <label style={styles.label}>Image URL *</label>
                 <input
                   type="url"
                   style={styles.input}
@@ -262,11 +266,11 @@ const BannerManagement = () => {
                   required
                   key={formData.url}
                 />
-                {formData.url && <small style={{ ...styles.helpText, color: '#10b981', marginTop: '4px' }}>✓ URL đã được cập nhật</small>}
+                {formData.url && <small style={{ ...styles.helpText, color: '#10b981', marginTop: '4px' }}>✓ URL updated</small>}
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Vị Trí Hiển Thị *</label>
+                <label style={styles.label}>Display Position *</label>
                 <input
                   type="text"
                   style={styles.input}
@@ -276,12 +280,12 @@ const BannerManagement = () => {
                   min="1"
                   required
                 />
-                <small style={styles.helpText}>Số nhỏ hơn sẽ hiển thị trước</small>
+                <small style={styles.helpText}>Lower numbers will be displayed first</small>
               </div>
 
               {formData.url && (
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Xem Trước</label>
+                  <label style={styles.label}>Preview</label>
                   <div style={styles.previewContainer}>
                     <img
                       src={formData.url}
@@ -298,11 +302,11 @@ const BannerManagement = () => {
               <div style={styles.modalActions}>
                 <button type="button" style={styles.cancelButton} onClick={() => setIsModalOpen(false)}>
                   <X size={18} />
-                  Hủy
+                  Cancel
                 </button>
                 <button type="submit" style={styles.saveButton} disabled={uploading}>
                   <Save size={18} />
-                  {currentBanner ? 'Cập Nhật' : 'Thêm Mới'}
+                  {currentBanner ? 'Update' : 'Add'}
                 </button>
               </div>
             </form>
@@ -311,12 +315,12 @@ const BannerManagement = () => {
       )}
       <ConfirmDialog
         open={confirmOpen}
-        title="Xác nhận xóa"
-        content="Bạn có chắc chắn muốn xóa banner này?"
+        title="Confirm Delete"
+        content="Are you sure you want to delete this banner?"
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
         loading={false}
-        confirmText="Xóa"
+        confirmText="Delete"
       />
     </div>
   );

@@ -79,13 +79,13 @@ const NotificationManagement = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.title.trim()) newErrors.title = 'Vui lòng nhập tiêu đề';
-    else if (formData.title.length < 5) newErrors.title = 'Tiêu đề phải có ít nhất 5 ký tự';
-    else if (formData.title.length > 255) newErrors.title = 'Tiêu đề không được vượt quá 255 ký tự';
-    if (!formData.content.trim()) newErrors.content = 'Vui lòng nhập nội dung';
-    else if (formData.content.length < 10) newErrors.content = 'Nội dung phải có ít nhất 10 ký tự';
-    else if (formData.content.length > 2000) newErrors.content = 'Nội dung không được vượt quá 2000 ký tự';
-    if (!formData.sendToAll && !formData.userId) newErrors.userId = 'Vui lòng chọn người nhận';
+    if (!formData.title.trim()) newErrors.title = 'Please enter a title';
+    else if (formData.title.length < 5) newErrors.title = 'Title must be at least 5 characters';
+    else if (formData.title.length > 255) newErrors.title = 'Title must not exceed 255 characters';
+    if (!formData.content.trim()) newErrors.content = 'Please enter content';
+    else if (formData.content.length < 10) newErrors.content = 'Content must be at least 10 characters';
+    else if (formData.content.length > 2000) newErrors.content = 'Content must not exceed 2000 characters';
+    if (!formData.sendToAll && !formData.userId) newErrors.userId = 'Please select a recipient';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -115,14 +115,14 @@ const NotificationManagement = () => {
       };
       await notificationApi.createNotification(requestData);
       showSnackbar({
-        message: formData.sendToAll ? 'Đã gửi thông báo đến tất cả người dùng' : 'Đã tạo thông báo thành công',
+        message: formData.sendToAll ? 'Notification sent to all users' : 'Notification created successfully',
         severity: 'success'
       });
       handleCloseDialog();
       loadNotifications();
     } catch (err) {
       console.error('Error creating notification:', err);
-      showSnackbar({ message: err.response?.data?.message || 'Không thể tạo thông báo. Vui lòng thử lại!', severity: 'error' });
+      showSnackbar({ message: err.response?.data?.message || 'Unable to create notification. Please try again!', severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -143,11 +143,11 @@ const NotificationManagement = () => {
   const getStatusText = (status) => {
     switch (status) {
       case 'READ':
-        return 'Đã đọc';
+        return 'Read';
       case 'UNREAD':
-        return 'Chưa đọc';
+        return 'Unread';
       case 'DELETED':
-        return 'Đã xóa';
+        return 'Deleted';
       default:
         return status;
     }
@@ -159,9 +159,9 @@ const NotificationManagement = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <NotificationImportantIcon fontSize="large" color="primary" />
           <Box>
-            <Typography variant="h3">Quản lý Thông báo</Typography>
+            <Typography variant="h3">Notification Management</Typography>
             <Typography variant="body2" color="text.secondary">
-              Tạo và quản lý thông báo gửi đến khách hàng
+              Create and manage notifications sent to customers
             </Typography>
           </Box>
         </Box>
@@ -169,13 +169,13 @@ const NotificationManagement = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <TextField
             size="small"
-            placeholder="Tìm thông báo"
+            placeholder="Search notifications"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{ startAdornment: <SearchIcon /> }}
           />
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenDialog} disabled={loading}>
-            Tạo thông báo mới
+            Create new notification
           </Button>
         </Box>
       </Toolbar>
@@ -185,10 +185,10 @@ const NotificationManagement = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Tiêu đề</TableCell>
-                <TableCell>Người nhận</TableCell>
-                <TableCell>Ngày gửi</TableCell>
-                <TableCell>Trạng thái</TableCell>
+                <TableCell>Title</TableCell>
+                <TableCell>Recipient</TableCell>
+                <TableCell>Sent Date</TableCell>
+                <TableCell>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -201,7 +201,7 @@ const NotificationManagement = () => {
               ) : filteredNotifications.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
-                    {searchTerm ? 'Không tìm thấy thông báo nào' : 'Chưa có thông báo nào'}
+                    {searchTerm ? 'No notifications found' : 'No notifications yet'}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -214,7 +214,7 @@ const NotificationManagement = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {notification.isGlobal ? 'Tất cả người dùng' : users.find((u) => u.id === notification.userId)?.fullName || 'N/A'}
+                      {notification.isGlobal ? 'All users' : users.find((u) => u.id === notification.userId)?.fullName || 'N/A'}
                     </TableCell>
                     <TableCell>{notification.sentAt ? new Date(notification.sentAt).toLocaleString('vi-VN') : 'N/A'}</TableCell>
                     <TableCell>{getStatusText(notification.status)}</TableCell>
@@ -227,24 +227,24 @@ const NotificationManagement = () => {
       </Box>
 
       <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Tạo thông báo mới</DialogTitle>
+        <DialogTitle>Create New Notification</DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
-              label="Tiêu đề"
+              label="Title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               error={!!errors.title}
-              helperText={errors.title || `${formData.title.length}/255 ký tự`}
+              helperText={errors.title || `${formData.title.length}/255 characters`}
               disabled={loading}
               fullWidth
             />
             <TextField
-              label="Nội dung"
+              label="Content"
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               error={!!errors.content}
-              helperText={errors.content || `${formData.content.length}/2000 ký tự`}
+              helperText={errors.content || `${formData.content.length}/2000 characters`}
               disabled={loading}
               fullWidth
               multiline
@@ -253,21 +253,21 @@ const NotificationManagement = () => {
 
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Người nhận
+                Recipient
               </Typography>
               <RadioGroup
                 value={formData.sendToAll ? 'all' : 'single'}
                 onChange={(e) => setFormData({ ...formData, sendToAll: e.target.value === 'all' })}
               >
-                <FormControlLabel value="all" control={<Radio />} label={`Gửi cho tất cả (${users.length})`} />
-                <FormControlLabel value="single" control={<Radio />} label="Chọn người dùng cụ thể" />
+                <FormControlLabel value="all" control={<Radio />} label={`Send to all (${users.length})`} />
+                <FormControlLabel value="single" control={<Radio />} label="Select specific user" />
               </RadioGroup>
 
               {!formData.sendToAll && (
                 <Box sx={{ mt: 1 }}>
                   <TextField
                     size="small"
-                    placeholder="Tìm người dùng..."
+                    placeholder="Search user..."
                     value={userSearchTerm}
                     onChange={(e) => setUserSearchTerm(e.target.value)}
                     InputProps={{ startAdornment: <SearchIcon /> }}
@@ -277,7 +277,7 @@ const NotificationManagement = () => {
                     <List>
                       {filteredUsers.length === 0 ? (
                         <ListItem>
-                          <ListItemText primary={userSearchTerm ? 'Không tìm thấy người dùng nào' : 'Không có người dùng nào'} />
+                          <ListItemText primary={userSearchTerm ? 'No users found' : 'No users available'} />
                         </ListItem>
                       ) : (
                         filteredUsers.map((u) => (
@@ -303,10 +303,10 @@ const NotificationManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={loading} startIcon={<CloseIcon />}>
-            Hủy
+            Cancel
           </Button>
           <Button variant="contained" onClick={handleSubmit} disabled={loading} startIcon={<SendIcon />}>
-            {loading ? <CircularProgress size={16} /> : formData.sendToAll ? 'Gửi đến tất cả' : 'Tạo thông báo'}
+            {loading ? <CircularProgress size={16} /> : formData.sendToAll ? 'Send to all' : 'Create notification'}
           </Button>
         </DialogActions>
       </Dialog>
