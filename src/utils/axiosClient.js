@@ -45,6 +45,7 @@ axiosClient.interceptors.request.use(
 
 // ----- Biến kiểm soát refresh token -----
 let isRefreshing = false;
+let isSessionExpired = false; // Flag để tránh gọi handleSessionExpired nhiều lần
 let subscribers = [];
 
 function onAccessTokenFetched(newToken) {
@@ -81,7 +82,12 @@ axiosClient.interceptors.response.use(
         console.error(`❌ [${reqId}] Refresh token expired - Logging out`);
         isRefreshing = false;
         subscribers = []; // Clear all waiting requests
-        handleSessionExpired();
+
+        // Only handle session expired once
+        if (!isSessionExpired) {
+          isSessionExpired = true;
+          handleSessionExpired();
+        }
         return Promise.reject(error);
       }
 
@@ -123,13 +129,23 @@ axiosClient.interceptors.response.use(
         isRefreshing = false;
         subscribers = []; // Clear all waiting requests
         console.error(`❌ [${reqId}] Refresh token failed - Session expired`, refreshError);
-        handleSessionExpired();
+
+        // Only handle session expired once
+        if (!isSessionExpired) {
+          isSessionExpired = true;
+          handleSessionExpired();
+        }
         return Promise.reject(refreshError);
       }
     }
 
-    // Log lỗi khác
-    console.error(`❌ [${reqId}] ${error.response?.status || 'ERR'} ${error.config?.url || 'Unknown'}`);
+    // Log lỗi giống format response thành công
+    console.error(`❌ [${reqId}] Response:`, {
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      status: error.response?.status || 'ERR',
+      message: error.message
+    });
 
     return Promise.reject(error);
   }

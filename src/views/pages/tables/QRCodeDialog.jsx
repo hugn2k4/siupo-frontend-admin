@@ -1,5 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
-import { Dialog, DialogTitle, DialogContent, IconButton, Box, Typography } from '@mui/material';
+import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function QRCodeDialog({ open, onClose, tableData }) {
