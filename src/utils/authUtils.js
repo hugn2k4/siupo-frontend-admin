@@ -60,7 +60,7 @@ export const handleSessionExpired = () => {
   // Redirect to login page after notification duration
   console.log(`🔐 Redirecting to login page in ${notificationDuration}ms...`);
   setTimeout(() => {
-    window.location.href = '/login';
+    window.location.href = '/pages/login';
   }, notificationDuration);
 };
 
@@ -84,5 +84,5 @@ export const handleLogout = (message = 'Logged out successfully') => {
   }
 
   // Redirect to login page
-  window.location.href = '/login';
+  window.location.href = '/pages/login';
 };
