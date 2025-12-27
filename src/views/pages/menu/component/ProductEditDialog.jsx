@@ -31,7 +31,7 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
       name: initialData?.name || '',
       price: initialData?.price || 0,
       description: initialData?.description || '',
-      categoryId: initialData?.category?.id || '',
+      categoryId: initialData?.category?.id || initialData?.categoryId || '',
       images: initialData?.images || [],
       tags: initialData?.tags || []
     }
@@ -83,11 +83,12 @@ const ProductEditDialog = ({ open, onClose, onSave, initialData = null, categori
   }, []);
 
   React.useEffect(() => {
+    const rawCategoryId = initialData?.category?.id || initialData?.categoryId || '';
     reset({
       name: initialData?.name || '',
       price: initialData?.price || 0,
       description: initialData?.description || '',
-      categoryId: initialData?.category?.id || '',
+      categoryId: rawCategoryId !== '' ? Number(rawCategoryId) : '',
       images: initialData?.imageUrls || [],
       tags: initialData?.tags || []
     });
