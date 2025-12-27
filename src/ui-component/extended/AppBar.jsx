@@ -68,7 +68,7 @@ export default function AppBar({ ...others }) {
               <Button color="inherit" component={Link} href="#">
                 Home
               </Button>
-              <Button color="inherit" component={RouterLink} to="/login" target="_blank">
+              <Button color="inherit" component={RouterLink} to="/pages/login" target="_blank">
                 Dashboard
               </Button>
               <Button color="inherit" component={Link} href="https://codedthemes.gitbook.io/berry" target="_blank">
@@ -94,7 +94,7 @@ export default function AppBar({ ...others }) {
                           <ListItemText primary="Home" />
                         </ListItemButton>
                       </Link>
-                      <Link sx={{ textDecoration: 'none' }} href="/login" target="_blank">
+                      <Link sx={{ textDecoration: 'none' }} href="/pages/login" target="_blank">
                         <ListItemButton component="a">
                           <ListItemIcon>
                             <IconDashboard />
